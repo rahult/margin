@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <rect x="0" y="0" width="1024" height="1024" rx="228" fill="#eef1ee"/>
+  <rect x="212" y="212" width="600" height="600" rx="140" fill="#163d32"/>
+  <text x="512" y="668"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="420"
+        fill="#f4f7f4"
+        text-anchor="middle">M</text>
+  <rect x="332" y="716" width="360" height="18" rx="9" fill="#e4eee8" opacity="0.85"/>
+  <rect x="332" y="716" width="210" height="18" rx="9" fill="#7fb89e"/>
+</svg>
