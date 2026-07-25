@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Margin — read what you can't afford to skim</title>
+<meta name="description" content="Margin is a local-first active-reading environment for RFCs, ADRs, specs, and plans. Guided reading, a thinking companion, and a bridge to your coding agents."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#1f211f;--panel:#242624;--surface:#2b2d2a;--border:#333733;--text:#e4e7e2;--body:#c9cdc5;--muted:#a9aea7;--dim:#7f857e;--sage:#8fc3a6;--sage-deep:#2f6b52;--gold:#e8c766}
+*{box-sizing:border-box;margin:0}
+body{font-family:"Instrument Sans",ui-sans-serif,system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
+::selection{background:#33413a;color:#e8ebe5}
+.wrap{max-width:960px;margin:0 auto;padding:0 28px}
+nav{display:flex;align-items:center;justify-content:space-between;padding:26px 0;border-bottom:1px solid var(--border)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:650;font-size:17px}
+.mark{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;background:var(--sage-deep);color:#eef4ef;font-family:"Newsreader",Georgia,serif;font-size:16px}
+.badge{font-size:11px;color:var(--gold);border:1px solid #4a4436;background:#2e2b24;padding:3px 9px;border-radius:999px;letter-spacing:.04em}
+nav a{color:var(--muted);text-decoration:none;font-size:13.5px}
+nav a:hover{color:var(--text)}
+.hero{padding:96px 0 80px;max-width:720px}
+h1{font-family:"Newsreader",Georgia,serif;font-weight:560;font-size:clamp(38px,6vw,58px);line-height:1.06;letter-spacing:-.02em}
+h1 em{font-style:italic;color:var(--sage)}
+.hero p{margin:22px 0 34px;font-size:17px;color:var(--muted);max-width:560px}
+.cta{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.btn{display:inline-block;padding:12px 20px;border-radius:9px;font-size:14px;font-weight:600;text-decoration:none}
+.btn.primary{background:var(--sage-deep);color:#eef4ef}
+.btn.primary:hover{background:#35785d}
+.btn.ghost{border:1px solid var(--border);color:var(--muted)}
+.btn.ghost:hover{color:var(--text);border-color:#4a4f4a}
+.quickstart{margin-top:44px;background:#1a1c1a;border:1px solid var(--border);border-radius:10px;padding:16px 20px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;color:var(--body);overflow-x:auto}
+.quickstart .c{color:#5c625b}
+.quickstart .p{color:var(--sage)}
+section{padding:72px 0;border-top:1px solid var(--border)}
+.kicker{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--dim);margin-bottom:14px}
+h2{font-family:"Newsreader",Georgia,serif;font-weight:560;font-size:clamp(26px,4vw,34px);letter-spacing:-.01em;line-height:1.2;max-width:520px}
+section>p.lede{margin:16px 0 0;color:var(--muted);max-width:560px;font-size:15.5px}
+.features{margin-top:48px;display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+.feat{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:22px 24px}
+.feat h3{font-size:15px;font-weight:650;margin-bottom:6px}
+.feat p{font-size:13.5px;color:var(--muted);line-height:1.55}
+.feat.w7{grid-column:span 7}.feat.w5{grid-column:span 5}.feat.w4{grid-column:span 4}.feat.w8{grid-column:span 8}
+.feat .tag{display:inline-block;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--sage);margin-bottom:10px}
+.feat .tag.gold{color:var(--gold)}
+code.inline{font-family:ui-monospace,Menlo,monospace;font-size:.9em;background:#1a1c1a;border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:var(--sage)}
+.agent{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;margin-top:40px}
+.agent .steps{counter-reset:s}
+.agent .step{display:flex;gap:14px;padding:14px 0;border-top:1px solid var(--border)}
+.agent .step:first-child{border-top:0}
+.agent .step span{counter-increment:s;flex:none;width:26px;height:26px;border:1px solid var(--border);border-radius:8px;display:grid;place-items:center;font-size:11px;color:var(--dim)}
+.agent .step span::before{content:counter(s,decimal-leading-zero)}
+.agent .step b{display:block;font-size:14px}
+.agent .step p{font-size:13px;color:var(--muted)}
+@media(max-width:760px){.agent{grid-template-columns:1fr}.feat.w7,.feat.w5,.feat.w4,.feat.w8{grid-column:span 12}}
+footer{padding:40px 0 56px;border-top:1px solid var(--border);display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--dim)}
+footer a{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <div class="brand"><div class="mark">M</div> Margin <span class="badge">alpha</span></div>
+  <a href="https://github.com/rahult/margin">GitHub ↗</a>
+</nav>
+
+<header class="hero">
+  <h1>Read what you can't<br/>afford to <em>skim</em>.</h1>
+  <p>Margin turns dense documents — RFCs, ADRs, specs, plans — into a guided argument you actually finish. A thinking companion reads alongside you, and everything you distill stays on your machine, readable by your coding agents.</p>
+  <div class="cta">
+    <a class="btn primary" href="https://github.com/rahult/margin/releases/tag/v0.1.0-alpha.0">Get the alpha</a>
+    <a class="btn ghost" href="https://github.com/rahult/margin">Read the README</a>
+  </div>
+  <div class="quickstart">
+    <span class="c"># node ≥ 20.11</span><br/>
+    npm install <span class="p">&amp;&amp;</span> npm run build <span class="p">&amp;&amp;</span> npm start<br/>
+    <span class="c"># → http://localhost:8787 — bring your own LLM key</span>
+  </div>
+</header>
+
+<section>
+  <div class="kicker">The reading loop</div>
+  <h2>Built for comprehension, not consumption.</h2>
+  <div class="features">
+    <div class="feat w7"><span class="tag">Reading map</span><h3>Any Markdown file becomes a guided argument</h3><p>Sections with priming questions, reading-time estimates, and progress that survives restarts. Arrow keys move you forward; the goal-gradient copy tells you how close you are.</p></div>
+    <div class="feat w5"><span class="tag">Thinking companion</span><h3>Ask, don't skim</h3><p>Grounded answers about the section you're on, from any OpenAI-compatible model. Your key stays in a local proxy — it never ships to the frontend.</p></div>
+    <div class="feat w5"><span class="tag">Argument maps</span><h3>Firm up the idea</h3><p>For ADR/RFC-shaped docs the companion extracts decision, reasons, rejected alternatives, and trade-offs — editable, persisted, yours.</p></div>
+    <div class="feat w7"><span class="tag">Knowledge that connects</span><h3>Notes that find each other</h3><p>Margin notes are atomic cards anchored to their section. The companion suggests links to notes in your other documents; you confirm, and the dots connect across everything you've read.</p></div>
+    <div class="feat w4"><span class="tag">Local TTS</span><h3>Listen, really</h3><p>Human-quality neural voice (Kokoro-82M) narrating section by section — fully on-device after a one-time model download.</p></div>
+    <div class="feat w8"><span class="tag gold">Coins</span><h3>A game about finishing documents</h3><p>Sections, notes, review answers, and listening earn gold coins. A hundred in a month waives the renewal. Retrieval practice at the end of each doc is where the real payout — and the real learning — happens.</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="kicker">Agent bridge</div>
+  <h2>Your coding agent reads what you distilled.</h2>
+  <p class="lede">Margin ships an MCP server. Claude Code, Cursor, Codex — any MCP client — can pull a spec and review it with your notes, review answers, and argument map attached as context.</p>
+  <div class="agent">
+    <div class="steps">
+      <div class="step"><span></span><div><b>Read in Margin</b><p>Notes, argument maps, and review answers are written to a local store as you work.</p></div></div>
+      <div class="step"><span></span><div><b>Register once</b><p><code class="inline">claude mcp add margin -- node /path/to/margin/server/mcp.mjs</code></p></div></div>
+      <div class="step"><span></span><div><b>Ask your agent</b><p>It calls <code class="inline">get_document</code>, <code class="inline">search_notes</code>, <code class="inline">list_documents</code> — and reviews the spec with your thinking attached.</p></div></div>
+    </div>
+    <div class="quickstart">
+      <span class="c"># what the agent sees</span><br/>
+      <span class="p">list_documents</span> → specs, plans, ADRs<br/>
+      <span class="p">get_document</span> → full markdown<br/>
+      <span class="p">search_notes</span> → your distilled<br/>
+      &nbsp;&nbsp;decisions &amp; open questions<br/>
+      <span class="p">resources</span> → notes · reviews · maps
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span>Local-first · no accounts · no tracking · your keys stay in <code class="inline">.env</code></span>
+  <span>v0.1.0-alpha.0 · <a href="https://github.com/rahult/margin/issues">feedback via issues</a></span>
+</footer>
+</div>
+</body>
+</html>
