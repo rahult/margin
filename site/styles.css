@@ -1,0 +1,223 @@
+/* Margin product site — same language as the app: dark green mark,
+   warm paper, editorial serif display, quiet sans body. */
+
+:root {
+  --paper: #eef1ee;
+  --raised: #f8faf8;
+  --ink: #18201d;
+  --ink-soft: #4e5954;
+  --ink-faint: #758079;
+  --hairline: #d9ded9;
+  --green: #163d32;
+  --green-soft: #1c5e49;
+  --mint: #e4eee8;
+  --mint-line: #ccddd2;
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --serif: Georgia, "Times New Roman", serif;
+}
+
+* { box-sizing: border-box; margin: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--sans);
+  color: var(--ink);
+  background: var(--paper);
+  line-height: 1.6;
+}
+
+img { max-width: 100%; display: block; }
+a { color: var(--green-soft); }
+
+/* ——— nav ——— */
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  border-bottom: 1px solid var(--hairline);
+  background: rgba(250, 251, 249, 0.9);
+  backdrop-filter: blur(14px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+
+.mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--green);
+  color: #f4f7f4;
+  font-family: var(--serif);
+  font-size: 17px;
+}
+
+.mark.small { width: 24px; height: 24px; font-size: 13px; border-radius: 7px; }
+
+.tag {
+  font-size: 11px;
+  color: var(--ink-faint);
+  background: #e8ece8;
+  padding: 3px 7px;
+  border-radius: 6px;
+}
+
+.nav nav { display: flex; gap: 22px; align-items: center; }
+.nav nav a { color: var(--ink-soft); text-decoration: none; font-size: 14px; }
+.nav nav a:hover { color: var(--ink); }
+.nav .github { font-weight: 600; color: var(--green); }
+
+/* ——— hero ——— */
+
+.hero {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 88px 28px 40px;
+  text-align: left;
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--green-soft);
+  margin-bottom: 18px;
+}
+
+h1 {
+  font-family: var(--serif);
+  font-size: clamp(2.1rem, 4.6vw, 3.4rem);
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  font-weight: 500;
+  max-width: 20ch;
+}
+
+.lede {
+  font-size: 1.15rem;
+  color: var(--ink-soft);
+  max-width: 56ch;
+  margin-top: 22px;
+}
+
+.cta { display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap; }
+
+.button {
+  display: inline-block;
+  padding: 11px 20px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 140ms ease-out, background-color 140ms ease-out;
+}
+
+.button:active { transform: scale(0.98); }
+
+.button.primary { background: var(--green); color: #f4f7f4; }
+.button.primary:hover { background: var(--green-soft); }
+
+.button.ghost { border: 1px solid var(--hairline); color: var(--ink-soft); background: var(--raised); }
+.button.ghost:hover { color: var(--ink); border-color: var(--ink-faint); }
+
+.button.secondary { border: 1px solid var(--mint-line); background: var(--mint); color: var(--green); }
+.button.secondary:hover { border-color: var(--green-soft); }
+
+.shot { margin-top: 56px; }
+.shot img {
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  box-shadow: 0 2px 4px rgba(24, 32, 29, 0.05), 0 24px 64px rgba(24, 32, 29, 0.1);
+}
+.shot figcaption {
+  font-size: 13px;
+  color: var(--ink-faint);
+  margin-top: 12px;
+}
+
+/* ——— sections ——— */
+
+section { max-width: 880px; margin: 0 auto; padding: 72px 28px 8px; }
+
+h2 {
+  font-family: var(--serif);
+  font-size: clamp(1.5rem, 2.8vw, 2.1rem);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin-bottom: 28px;
+}
+
+.steps { list-style: none; padding: 0; counter-reset: step; }
+.steps li {
+  counter-increment: step;
+  display: flex;
+  gap: 18px;
+  padding: 16px 0;
+  border-top: 1px solid var(--hairline);
+}
+.steps li::before {
+  content: "0" counter(step);
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--green-soft);
+  font-size: 1.05rem;
+  min-width: 32px;
+}
+.steps b { display: block; font-size: 1.02rem; }
+.steps span { color: var(--ink-soft); font-size: 0.95rem; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 28px 32px;
+}
+.grid h3 { font-size: 1rem; margin-bottom: 6px; }
+.grid p { font-size: 0.93rem; color: var(--ink-soft); }
+
+.principles ul { padding-left: 20px; color: var(--ink-soft); }
+.principles li { margin-bottom: 8px; }
+.roadmap {
+  margin-top: 24px;
+  padding: 16px 18px;
+  background: var(--mint);
+  border: 1px solid var(--mint-line);
+  border-radius: 12px;
+  color: #174c3b;
+  font-size: 0.95rem;
+}
+
+.download p { color: var(--ink-soft); max-width: 52ch; }
+.platforms { display: flex; gap: 12px; margin: 26px 0 14px; flex-wrap: wrap; }
+.src { font-size: 0.92rem; }
+
+/* ——— footer ——— */
+
+footer {
+  margin-top: 88px;
+  border-top: 1px solid var(--hairline);
+  padding: 26px 28px 34px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--ink-faint);
+  font-size: 13px;
+}
+footer p { font-family: var(--serif); font-style: italic; }
+
+@media (max-width: 640px) {
+  .nav nav a:not(.github):not([href="#download"]) { display: none; }
+  .hero { padding-top: 56px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .button { transition: none; }
+}
