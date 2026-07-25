@@ -1,10 +1,14 @@
 {
-  "name": "margin-prototype",
+  "name": "margin",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.0-alpha.0",
   "type": "module",
+  "engines": {
+    "node": ">=20.11"
+  },
   "scripts": {
     "dev": "vite",
+    "start": "node server/proxy.mjs",
     "proxy": "node server/proxy.mjs",
     "mcp": "node server/mcp.mjs",
     "mock-upstream": "node server/mock-upstream.mjs",

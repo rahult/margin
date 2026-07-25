@@ -214,10 +214,33 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'POST' && req.url === '/api/tts') return handleTts(req, res);
   const url = new URL(req.url ?? '/', 'http://localhost');
   if (url.pathname.startsWith('/api/')) return handleStore(req, res, url);
+  // Static: serve the built app (npm run build) so one process is the whole product.
+  if (req.method === 'GET' && fs.existsSync(distDir)) return serveStatic(req, res, url);
   send(res, 404, {error: 'Not found.'});
 });
 
+const distDir = path.join(root, 'dist');
+const MIME = {
+  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css',
+  '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon',
+  '.json': 'application/json', '.map': 'application/json', '.woff2': 'font/woff2',
+  '.wav': 'audio/wav', '.webmanifest': 'application/manifest+json',
+};
+function serveStatic(req, res, url) {
+  let p = decodeURIComponent(url.pathname);
+  if (p === '/') p = '/index.html';
+  const file = path.normalize(path.join(distDir, p));
+  const target = file.startsWith(distDir) && fs.existsSync(file) && fs.statSync(file).isFile()
+    ? file
+    : path.join(distDir, 'index.html'); // SPA fallback
+  if (!fs.existsSync(target)) return send(res, 404, {error: 'Not found.'});
+  res.writeHead(200, {'Content-Type': MIME[path.extname(target)] ?? 'application/octet-stream'});
+  fs.createReadStream(target).pipe(res);
+}
+
 const port = Number(config.LLM_PROXY_PORT) || 8787;
 server.listen(port, '127.0.0.1', () => {
-  console.log(`margin-llm-proxy listening on http://127.0.0.1:${port} (${config.LLM_API_KEY ? 'configured' : 'no API key yet'})`);
+  console.log(`margin listening on http://127.0.0.1:${port} (${config.LLM_API_KEY ? 'configured' : 'no API key yet — onboarding will ask'})`);
+  if (fs.existsSync(distDir)) console.log('serving the app — open the URL above in a browser');
+  else console.log('no dist/ yet — run `npm run build` for the full app, or `npm run dev` for development');
 });

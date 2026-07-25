@@ -18,10 +18,9 @@ A long document becomes less intimidating when it is presented as an argument to
 
 ## Deliberate exclusions
 
-- No generative AI backend yet.
 - No PDF or Google Docs ingestion yet.
 - No accounts or cloud sync.
-- No points, badges, or streaks detached from comprehension.
+- No points, badges, or streaks detached from comprehension (the coin economy rewards comprehension actions only).
 
 ## Commercial direction
 
