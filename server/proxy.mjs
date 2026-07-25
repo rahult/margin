@@ -67,6 +67,32 @@ const status = () => ({
   baseUrl: config.LLM_BASE_URL,
 });
 
+// Local neural TTS (Kokoro-82M, runs fully on-device). Loaded lazily on first request.
+let ttsModel = null;
+let ttsQueue = Promise.resolve();
+async function generateSpeech(text) {
+  if (!ttsModel) {
+    const {KokoroTTS} = await import('kokoro-js');
+    ttsModel = await KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX', {dtype: 'q8'});
+    console.log('kokoro tts model loaded');
+  }
+  const audio = await ttsModel.generate(text, {voice: 'af_heart'});
+  return Buffer.from(audio.toWav());
+}
+
+function handleTts(req, res) {
+  readBody(req).then(body => {
+    const text = typeof body.text === 'string' ? body.text.trim() : '';
+    if (!text) return send(res, 400, {error: 'Body must include text.'});
+    if (text.length > 2000) return send(res, 400, {error: 'Text too long (max 2000 chars).'});
+    // Serialize generation: one utterance at a time keeps latency predictable.
+    ttsQueue = ttsQueue.then(() => generateSpeech(text)).then(wav => {
+      res.writeHead(200, {'Content-Type': 'audio/wav', 'Access-Control-Allow-Origin': '*'});
+      res.end(wav);
+    }).catch(e => send(res, 500, {error: `TTS failed: ${e.message}`}));
+  }).catch(() => send(res, 400, {error: 'Invalid JSON body.'}));
+}
+
 async function handleChat(req, res) {
   if (!config.LLM_API_KEY) return send(res, 400, {error: 'No API key configured. Complete onboarding first.'});
   let body;
@@ -105,6 +131,7 @@ const server = http.createServer(async (req, res) => {
     return send(res, 200, status());
   }
   if (req.method === 'POST' && req.url === '/api/chat') return handleChat(req, res);
+  if (req.method === 'POST' && req.url === '/api/tts') return handleTts(req, res);
   send(res, 404, {error: 'Not found.'});
 });
 

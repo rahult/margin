@@ -56,11 +56,11 @@ export function parseMarkdown(md:string,fallbackTitle='Untitled document'):Parse
  const introEnd=heads[0]??lines.length;
  const intro=(h1>=0?lines.slice(h1+1,introEnd):lines.slice(0,introEnd)).join('\n');
 
- const parts:string[]=[`<h1>${marked.parseInline(title,{async:false})}</h1>`];
- if(intro.trim())parts.push(marked.parse(intro,{async:false}));
-
+ const parts:string[]=[];
  const sections:Section[]=[];
  if(heads.length===0){
+  parts.push(`<h1 id="document">${marked.parseInline(title,{async:false})}</h1>`);
+  if(intro.trim())parts.push(marked.parse(intro,{async:false}));
   const words=md.split(/\s+/).filter(Boolean).length;
   sections.push({id:'document',number:'01',title,kind:kindOf(md),minutes:Math.max(1,Math.round(words/180)),question:QUESTION_TEMPLATES[0](title)});
  }else{
@@ -78,7 +78,12 @@ export function parseMarkdown(md:string,fallbackTitle='Untitled document'):Parse
     minutes:Math.max(1,Math.round(words/180)),
     question:QUESTION_TEMPLATES[i%QUESTION_TEMPLATES.length](clean),
    });
-   parts.push(`<h2 id="${id}">${marked.parseInline(raw,{async:false})}</h2>${marked.parse(chunk,{async:false})}`);
+   // The first section anchors on the h1 so the intro is inside its range (TTS, scroll).
+   if(i===0){
+    parts.push(`<h1 id="${id}">${marked.parseInline(title,{async:false})}</h1>`);
+    if(intro.trim())parts.push(marked.parse(intro,{async:false}));
+   }
+   parts.push(`<h2${i===0?'':` id="${id}"`}>${marked.parseInline(raw,{async:false})}</h2>${marked.parse(chunk,{async:false})}`);
   });
  }
 
