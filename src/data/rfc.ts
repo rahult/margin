@@ -1,11 +1,31 @@
-export const sections = [
- {id:'context',number:'01',title:'Context & pressure',kind:'Problem',minutes:4,question:'What operational failure are we actually trying to prevent?'},
- {id:'requirements',number:'02',title:'Decision criteria',kind:'Criteria',minutes:5,question:'Which requirement is genuinely non-negotiable?'},
- {id:'options',number:'03',title:'Options considered',kind:'Explore',minutes:8,question:'Where does each option move complexity rather than remove it?'},
- {id:'decision',number:'04',title:'Decision',kind:'Commit',minutes:4,question:'What must be true for this choice to remain correct?'},
- {id:'consequences',number:'05',title:'Consequences',kind:'Trade-offs',minutes:6,question:'Which cost will surprise us six months after launch?'},
-];
-export const documentHtml = `
+import type {ParsedDoc} from './markdown';
+
+export const defaultDoc:ParsedDoc={
+ title:'RFC-014 · Event backbone selection',
+ mission:'Test whether this decision still works at 40 teams.',
+ review:[
+  'Why is Kafka not the default despite its stronger ecosystem?',
+  'What behaviour must every consumer implement?',
+  'What evidence would trigger reconsidering this decision?',
+ ],
+ lens:[
+  {kind:'claim',text:'NATS is the best organisational fit.'},
+  {kind:'evidence',text:'Small platform team; moderate scale.'},
+  {kind:'risk',text:'Ease of entry can hide contract complexity.'},
+ ],
+ takeaways:[
+  'The problem is inconsistent cross-team delivery contracts, not raw throughput.',
+  'NATS JetStream is preferred because organisational fit outweighs maximal capability.',
+  'The decision is reversible: Kafka remains an escalation path for demonstrated log-processing needs.',
+ ],
+ sections:[
+  {id:'context',number:'01',title:'Context & pressure',kind:'Problem',minutes:4,question:'What operational failure are we actually trying to prevent?'},
+  {id:'requirements',number:'02',title:'Decision criteria',kind:'Criteria',minutes:5,question:'Which requirement is genuinely non-negotiable?'},
+  {id:'options',number:'03',title:'Options considered',kind:'Explore',minutes:8,question:'Where does each option move complexity rather than remove it?'},
+  {id:'decision',number:'04',title:'Decision',kind:'Commit',minutes:4,question:'What must be true for this choice to remain correct?'},
+  {id:'consequences',number:'05',title:'Consequences',kind:'Trade-offs',minutes:6,question:'Which cost will surprise us six months after launch?'},
+ ],
+ html:`
 <h1 id="context">RFC-014: Selecting an event backbone for operational workflows</h1>
 <p class="lead">A deliberately ordinary infrastructure decision, made difficult by reliability, team autonomy, and the cost of operating what we choose.</p>
 <div class="callout"><strong>Reading mission</strong><span>Decide whether the recommendation remains valid when the organisation grows from 12 to 40 product teams.</span></div>
@@ -32,4 +52,5 @@ export const documentHtml = `
 <p>The decision is based less on benchmark superiority and more on organisational fit. It gives teams a coherent model while remaining operable by the platform team we actually have. Kafka remains the escalation path when a workload demonstrates a need for deep log-processing capabilities, large retention windows, or an ecosystem dependency that materially changes the economics.</p>
 <h2 id="consequences">5. Consequences and guardrails</h2>
 <ul><li>Every event has an owning team, versioned schema, retention class, and documented idempotency strategy.</li><li>Consumers must assume duplicate delivery and observable lag.</li><li>The platform provides local development, dashboards, dead-letter handling, and paved-path client libraries.</li><li>We review the decision after two production migrations, not after an arbitrary calendar period.</li></ul>
-<p>The largest risk is false simplicity. NATS is easier to approach than Kafka, but reliable event-driven systems still demand disciplined contracts. If the platform presents the technology as “just publish a message,” teams will recreate the same ambiguity that this RFC is intended to remove.</p>`;
+<p>The largest risk is false simplicity. NATS is easier to approach than Kafka, but reliable event-driven systems still demand disciplined contracts. If the platform presents the technology as “just publish a message,” teams will recreate the same ambiguity that this RFC is intended to remove.</p>`,
+};

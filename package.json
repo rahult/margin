@@ -7,6 +7,7 @@
     "dev": "vite",
     "proxy": "node server/proxy.mjs",
     "mock-upstream": "node server/mock-upstream.mjs",
+    "eval": "node eval/run.mjs",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
