@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {parseMarkdown} from '../src/data/markdown.ts';
+import {daysLeft,FEE,monthKey,RULES,settlePreview,WAIVER} from '../src/coins.ts';
 
 const fixturesDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'fixtures');
 const fixtures = fs.readdirSync(fixturesDir).filter(f => f.endsWith('.md'));
@@ -42,4 +43,17 @@ for (const file of fixtures) {
 }
 
 console.log(`\n${failures === 0 ? 'ALL CHECKS PASSED' : `${failures} CHECK(S) FAILED`} across ${fixtures.length} fixtures`);
+
+// Coin economy (pure functions only — no localStorage in Node).
+console.log('\ncoin economy');
+check('waiver threshold is 100', WAIVER === 100);
+check('fee is $10', FEE === 10);
+check('monthKey is YYYY-MM', /^\d{4}-\d{2}$/.test(monthKey()));
+check('99 coins → charged, not waived', (() => { const s = settlePreview(99); return !s.waived && s.charged === 10; })());
+check('100 coins → waived, no charge', (() => { const s = settlePreview(100); return s.waived && s.charged === 0; })());
+check('150 coins → waived, no charge', (() => { const s = settlePreview(150); return s.waived && s.charged === 0; })());
+check('daysLeft is 0..30', (() => { const d = daysLeft(); return d >= 0 && d <= 30; })());
+check('a full engaged read roughly covers the waiver', RULES.section * 5 + RULES.note * 2 + RULES.ask * 2 + RULES.review * 3 + RULES.listen >= 100);
+
+console.log(`\n${failures === 0 ? 'ALL CHECKS PASSED' : `${failures} CHECK(S) FAILED`} (fixtures + coin economy)`);
 process.exit(failures === 0 ? 0 : 1);

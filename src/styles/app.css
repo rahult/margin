@@ -32,3 +32,35 @@
 
 /* Astryx Button in graphite chrome */
 .top-actions button{background:#2b2d2a !important;color:#c9cdc5 !important;border:1px solid #3a3e39 !important;box-shadow:none !important}
+
+/* Coin economy */
+.wallet-pill{display:flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;border:1px solid #4a4436;background:#2e2b24;color:#e8c766;font-size:12px;font-weight:700;animation:wallet-bump .45s cubic-bezier(.22,1,.36,1)}
+.wallet-pill .coin-icon{width:13px;height:13px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f7dd8a,#d9a441 60%,#a4762a);box-shadow:inset 0 0 0 1.5px rgba(255,240,200,.35)}
+@keyframes wallet-bump{0%{transform:scale(1)}35%{transform:scale(1.18);box-shadow:0 0 0 6px rgba(217,164,65,.18)}100%{transform:scale(1)}}
+.coin-layer{position:fixed;inset:0;pointer-events:none;z-index:50}
+.coin-fly{position:fixed;display:flex;align-items:center;gap:4px;color:#e8c766;font-weight:800;font-size:14px;text-shadow:0 1px 8px rgba(0,0,0,.5);animation:coin-fly 1s cubic-bezier(.5,0,.75,.4) both}
+.coin-fly i{width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f7dd8a,#d9a441 60%,#a4762a);animation:coin-spin .6s linear infinite}
+@keyframes coin-spin{0%{transform:rotateY(0)}100%{transform:rotateY(360deg)}}
+@keyframes coin-fly{0%{transform:translate(0,0) scale(.5);opacity:0}15%{opacity:1;transform:translate(0,-26px) scale(1.15)}100%{transform:translate(var(--tx),var(--ty)) scale(.35);opacity:0}}
+.renewal{margin-top:18px;padding:13px 4px;border-top:1px solid #333733;font-size:11px;color:#a9aea7}
+.renewal .label{color:#c9a756}
+.renewal-status{margin:10px 0 2px;font-size:12px}
+.renewal-status b{color:#e8c766;font-size:14px}
+.progress.gold i{background:linear-gradient(90deg,#a4762a,#e8c766)}
+.renewal small{color:#7f857e;display:block;margin-top:6px;line-height:1.5}
+.renewal button{margin-top:10px;border:1px solid #4a4436;background:transparent;color:#c9a756;border-radius:7px;padding:6px 10px;font-size:11px;cursor:pointer}
+.renewal button:hover{background:#2e2b24}
+.verdict-backdrop{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:rgba(10,11,10,.6);backdrop-filter:blur(6px);animation:fade-in .25s ease-out}
+@keyframes fade-in{from{opacity:0}to{opacity:1}}
+.verdict-card{position:relative;overflow:hidden;width:min(400px,90vw);background:#242624;border:1px solid #4a4436;border-radius:16px;padding:36px 32px;text-align:center;animation:verdict-pop .45s cubic-bezier(.22,1,.36,1)}
+.verdict-card.waived{box-shadow:0 0 60px rgba(217,164,65,.25)}
+@keyframes verdict-pop{0%{transform:scale(.85) translateY(14px);opacity:0}100%{transform:scale(1) translateY(0);opacity:1}}
+.verdict-card h2{font-family:"Newsreader",Georgia,serif;font-weight:560;font-size:27px;margin:0 0 10px;color:#eceee9}
+.verdict-card.waived h2{color:#e8c766}
+.verdict-card.due h2{color:#d69a9a}
+.verdict-card p{font-size:13.5px;line-height:1.55;color:#a9aea7;margin:0 0 22px}
+.verdict-card button{border:0;border-radius:9px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;background:#2f6b52;color:#eef4ef}
+.coin-rain{position:absolute;inset:0;pointer-events:none}
+.coin-rain span{position:absolute;top:-18px;left:var(--x);width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f7dd8a,#d9a441 60%,#a4762a);animation:coin-rain 1.6s cubic-bezier(.45,.05,.7,.4) var(--d) both}
+@keyframes coin-rain{0%{transform:translateY(0) rotateY(0);opacity:0}10%{opacity:1}100%{transform:translateY(340px) rotateY(720deg);opacity:0}}
+@media(prefers-reduced-motion:reduce){.coin-fly,.coin-rain span,.wallet-pill,.verdict-card{animation:none}}
