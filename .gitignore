@@ -31,3 +31,6 @@ Thumbs.db
 .env.*
 !.env.example
 !.env.sample
+
+# Local knowledge store (user data)
+server/data/

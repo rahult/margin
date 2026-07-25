@@ -64,3 +64,27 @@
 .coin-rain span{position:absolute;top:-18px;left:var(--x);width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f7dd8a,#d9a441 60%,#a4762a);animation:coin-rain 1.6s cubic-bezier(.45,.05,.7,.4) var(--d) both}
 @keyframes coin-rain{0%{transform:translateY(0) rotateY(0);opacity:0}10%{opacity:1}100%{transform:translateY(340px) rotateY(720deg);opacity:0}}
 @media(prefers-reduced-motion:reduce){.coin-fly,.coin-rain span,.wallet-pill,.verdict-card{animation:none}}
+
+/* Note cards + cross-document links */
+.note-card{background:#2b2d2a;border:1px solid #333733;border-radius:8px;padding:9px 11px;margin-top:8px}
+.note-card p{font-family:"Newsreader",Georgia,serif;font-size:12.5px;color:#c9cdc5;margin:0}
+.note-card small{display:block;color:#7f857e;font-size:10px;margin-top:5px}
+.note-link{display:inline-block;margin:7px 6px 0 0;padding:2px 8px;border-radius:999px;background:#2c3a32;border:1px solid #3d5a4b;color:#8fc3a6;font-size:10px}
+.link-suggestion{margin-top:8px;padding:8px 9px;border:1px dashed #4d7a64;border-radius:8px;background:#26302b}
+.link-suggestion span{display:block;font-size:11px;line-height:1.5;color:#a9aea7}
+.link-suggestion b{color:#9ccdb2;font-weight:600}
+.link-suggestion div{display:flex;gap:8px;margin-top:6px}
+.link-suggestion button{border:0;background:transparent;color:#8fc3a6;font-size:11px;font-weight:600;padding:0;cursor:pointer}
+.link-suggestion button.ghost{color:#7f857e}
+
+/* Argument map */
+.argmap button{margin-top:10px;border:0;background:transparent;color:#8fc3a6;padding:0;font-size:11px;font-weight:600;cursor:pointer}
+.argmap button:disabled{opacity:.45;cursor:not-allowed}
+.argmap button.ghost{color:#7f857e;margin-top:12px}
+.map-body{margin-top:4px}
+.map-row{margin-top:12px}
+.map-row b{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#7f857e;margin-bottom:4px}
+.map-row input{width:100%;border:0;border-bottom:1px solid #333733;background:transparent;color:#c9cdc5;font-family:"Newsreader",Georgia,serif;font-size:12.5px;line-height:1.45;padding:3px 1px;outline:none}
+.map-row input:focus{border-color:#4d7a64;color:#e4e7e2}
+.map-row:first-child input{color:#dcdfd9;font-size:13.5px}
+.map-empty{color:#4a4f4a;font-size:12px}

@@ -44,7 +44,7 @@ let config = loadEnv();
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let data = '';
-    req.on('data', c => { data += c; if (data.length > 1e6) req.destroy(); });
+    req.on('data', c => { data += c; if (data.length > 8e6) req.destroy(); });
     req.on('end', () => { try { resolve(data ? JSON.parse(data) : {}); } catch (e) { reject(e); } });
     req.on('error', reject);
   });
@@ -55,7 +55,7 @@ function send(res, status, body) {
   res.writeHead(status, {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+    'Access-Control-Allow-Methods': 'GET,POST,PUT,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   });
   res.end(json);
@@ -66,6 +66,86 @@ const status = () => ({
   model: config.LLM_MODEL,
   baseUrl: config.LLM_BASE_URL,
 });
+
+// File-backed knowledge store: documents, margin notes, and review answers.
+// Shared with the MCP server (server/mcp.mjs) so coding agents can read what
+// the reader has distilled. Lives in server/data/ (gitignored).
+const dataDir = path.join(root, 'server', 'data');
+const store = {
+  read(name, fallback) {
+    try { return JSON.parse(fs.readFileSync(path.join(dataDir, name), 'utf8')); } catch { return fallback; }
+  },
+  write(name, value) {
+    fs.mkdirSync(dataDir, {recursive: true});
+    fs.writeFileSync(path.join(dataDir, name), JSON.stringify(value, null, 1));
+  },
+};
+const readDocs = () => store.read('documents.json', []);
+const writeDocs = docs => store.write('documents.json', docs);
+const readNotes = () => store.read('notes.json', {});
+const readReview = () => store.read('review.json', {});
+
+async function handleStore(req, res, url) {
+  const title = url.searchParams.get('title') ?? '';
+  if (req.method === 'GET' && url.pathname === '/api/library') {
+    const notes = readNotes();
+    return send(res, 200, {
+      documents: readDocs().map(({title: t, addedAt, words}) => ({title: t, addedAt, words, notes: (notes[t] ?? []).length})),
+    });
+  }
+  if (req.method === 'GET' && url.pathname === '/api/document') {
+    const doc = readDocs().find(d => d.title === title);
+    return doc ? send(res, 200, doc) : send(res, 404, {error: 'Document not found.'});
+  }
+  if (req.method === 'PUT' && url.pathname === '/api/document') {
+    let body;
+    try { body = await readBody(req); } catch { return send(res, 400, {error: 'Invalid JSON body.'}); }
+    if (typeof body.title !== 'string' || !body.title.trim() || typeof body.md !== 'string' || !body.md.trim()) {
+      return send(res, 400, {error: 'Body must include title and md.'});
+    }
+    const docs = readDocs().filter(d => d.title !== body.title);
+    docs.push({title: body.title, md: body.md, addedAt: Date.now(), words: body.md.split(/\s+/).filter(Boolean).length});
+    writeDocs(docs);
+    return send(res, 200, {ok: true});
+  }
+  if (req.method === 'GET' && url.pathname === '/api/notes') {
+    return send(res, 200, {notes: readNotes()[title] ?? []});
+  }
+  if (req.method === 'PUT' && url.pathname === '/api/notes') {
+    let body;
+    try { body = await readBody(req); } catch { return send(res, 400, {error: 'Invalid JSON body.'}); }
+    if (!title || !Array.isArray(body.notes)) return send(res, 400, {error: 'Need title param and notes[].'});
+    const all = readNotes();
+    all[title] = body.notes;
+    store.write('notes.json', all);
+    return send(res, 200, {ok: true});
+  }
+  if (req.method === 'GET' && url.pathname === '/api/review') {
+    return send(res, 200, {answers: readReview()[title] ?? []});
+  }
+  if (req.method === 'PUT' && url.pathname === '/api/review') {
+    let body;
+    try { body = await readBody(req); } catch { return send(res, 400, {error: 'Invalid JSON body.'}); }
+    if (!title || !Array.isArray(body.answers)) return send(res, 400, {error: 'Need title param and answers[].'});
+    const all = readReview();
+    all[title] = body.answers;
+    store.write('review.json', all);
+    return send(res, 200, {ok: true});
+  }
+  if (req.method === 'GET' && url.pathname === '/api/map') {
+    return send(res, 200, {map: store.read('maps.json', {})[title] ?? null});
+  }
+  if (req.method === 'PUT' && url.pathname === '/api/map') {
+    let body;
+    try { body = await readBody(req); } catch { return send(res, 400, {error: 'Invalid JSON body.'}); }
+    if (!title || typeof body.map !== 'object' || body.map === null) return send(res, 400, {error: 'Need title param and map object.'});
+    const all = store.read('maps.json', {});
+    all[title] = body.map;
+    store.write('maps.json', all);
+    return send(res, 200, {ok: true});
+  }
+  send(res, 404, {error: 'Not found.'});
+}
 
 // Local neural TTS (Kokoro-82M, runs fully on-device). Loaded lazily on first request.
 let ttsModel = null;
@@ -132,6 +212,8 @@ const server = http.createServer(async (req, res) => {
   }
   if (req.method === 'POST' && req.url === '/api/chat') return handleChat(req, res);
   if (req.method === 'POST' && req.url === '/api/tts') return handleTts(req, res);
+  const url = new URL(req.url ?? '/', 'http://localhost');
+  if (url.pathname.startsWith('/api/')) return handleStore(req, res, url);
   send(res, 404, {error: 'Not found.'});
 });
 

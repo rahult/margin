@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "vite",
     "proxy": "node server/proxy.mjs",
+    "mcp": "node server/mcp.mjs",
     "mock-upstream": "node server/mock-upstream.mjs",
-    "eval": "node eval/run.mjs",
+    "eval": "node eval/run.mjs && node eval/mcp-client.mjs",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",

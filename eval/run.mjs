@@ -5,6 +5,8 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {parseMarkdown} from '../src/data/markdown.ts';
 import {daysLeft,FEE,monthKey,RULES,settlePreview,WAIVER} from '../src/coins.ts';
+import {parseSuggestions} from '../src/links.ts';
+import {parseArgumentMap} from '../src/argmap.ts';
 
 const fixturesDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'fixtures');
 const fixtures = fs.readdirSync(fixturesDir).filter(f => f.endsWith('.md'));
@@ -54,6 +56,44 @@ check('100 coins → waived, no charge', (() => { const s = settlePreview(100); 
 check('150 coins → waived, no charge', (() => { const s = settlePreview(150); return s.waived && s.charged === 0; })());
 check('daysLeft is 0..30', (() => { const d = daysLeft(); return d >= 0 && d <= 30; })());
 check('a full engaged read roughly covers the waiver', RULES.section * 5 + RULES.note * 2 + RULES.ask * 2 + RULES.review * 3 + RULES.listen >= 100);
+
+// Link suggestions (pure parsing/matching — never link to invented notes).
+console.log('\nlink suggestions');
+const candidates = [
+  {title: 'RFC-014', id: 'a1', text: 'NATS is the best organisational fit.'},
+  {title: 'ADR-009', id: 'b2', text: 'Dual-write for one billing cycle, then cut over reads.'},
+];
+check('parses a valid suggestion array', (() => {
+  const s = parseSuggestions('Here are links: [{"title":"ADR-009","noteId":"b2","reason":"both about staged rollouts"}]', candidates);
+  return s.length === 1 && s[0].noteId === 'b2' && s[0].reason.includes('staged');
+})());
+check('rejects suggestions for notes that do not exist', parseSuggestions('[{"title":"ADR-009","noteId":"zzz","reason":"invented"}]', candidates).length === 0);
+check('returns [] on non-JSON replies', parseSuggestions('no json here', candidates).length === 0);
+check('caps at 2 suggestions', (() => {
+  const raw = JSON.stringify([
+    {title: 'RFC-014', noteId: 'a1', reason: 'x'},
+    {title: 'ADR-009', noteId: 'b2', reason: 'y'},
+    {title: 'RFC-014', noteId: 'a1', reason: 'z'},
+  ]);
+  return parseSuggestions(raw, candidates).length === 2;
+})());
+
+// Argument maps (tolerant JSON extraction from LLM replies).
+console.log('\nargument maps');
+check('parses a clean map', (() => {
+  const m = parseArgumentMap('{"decision":"Adopt NATS","reasons":["operable by small team"],"alternatives":["Kafka"],"tradeoffs":["narrower ecosystem"]}');
+  return m?.decision === 'Adopt NATS' && m.reasons.length === 1 && m.alternatives[0] === 'Kafka' && m.tradeoffs.length === 1;
+})());
+check('extracts JSON wrapped in prose', (() => {
+  const m = parseArgumentMap('Sure! Here is the map:\n{"decision":"Move to Postgres","reasons":["ACID","team familiarity"],"alternatives":[],"tradeoffs":["migration window"]}\nHope that helps.');
+  return m?.decision === 'Move to Postgres' && m?.reasons.length === 2;
+})());
+check('caps arrays at 4 items', (() => {
+  const m = parseArgumentMap(JSON.stringify({decision: 'x', reasons: ['1', '2', '3', '4', '5'], alternatives: [], tradeoffs: []}));
+  return m?.reasons.length === 4;
+})());
+check('returns null on garbage', parseArgumentMap('no json at all') === null);
+check('returns null when decision and reasons are empty', parseArgumentMap('{"decision":"","reasons":[],"alternatives":[],"tradeoffs":[]}') === null);
 
 console.log(`\n${failures === 0 ? 'ALL CHECKS PASSED' : `${failures} CHECK(S) FAILED`} (fixtures + coin economy)`);
 process.exit(failures === 0 ? 0 : 1);
