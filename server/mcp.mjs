@@ -10,7 +10,7 @@ import path from 'node:path';
 import readline from 'node:readline';
 import {fileURLToPath} from 'node:url';
 
-const dataDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'data');
+const dataDir = process.env.MARGIN_DATA_DIR ?? path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'data');
 const read = (name, fallback) => {
   try { return JSON.parse(fs.readFileSync(path.join(dataDir, name), 'utf8')); } catch { return fallback; }
 };

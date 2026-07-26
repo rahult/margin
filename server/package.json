@@ -1,0 +1,9 @@
+{
+  "name": "margin-backend",
+  "private": true,
+  "type": "module",
+  "description": "Runtime dependencies for the Margin local backend (bundled with the desktop app).",
+  "dependencies": {
+    "kokoro-js": "^1.2.1"
+  }
+}

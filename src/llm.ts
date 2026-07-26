@@ -1,8 +1,13 @@
 export type LlmStatus={configured:boolean;model:string;baseUrl:string};
 export type ChatMessage={role:'system'|'user'|'assistant';content:string};
 
+// Inside the packaged Tauri app the webview origin is tauri://localhost, so
+// API calls must go to the local backend explicitly. In the browser (dev or
+// npm start) relative paths work and go through Vite's proxy or the backend.
+const BASE=typeof window!=='undefined'&&window.location.protocol==='tauri:'?'http://127.0.0.1:8787':'';
+
 async function request<T>(path:string,init?:RequestInit):Promise<T>{
- const r=await fetch(path,{headers:{'Content-Type':'application/json'},...init});
+ const r=await fetch(BASE+path,{headers:{'Content-Type':'application/json'},...init});
  const data=await r.json().catch(()=>({}));
  if(!r.ok)throw new Error((data as {error?:string}).error??`Request failed (${r.status})`);
  return data as T;
@@ -15,7 +20,8 @@ export function saveConfig(cfg:{apiKey:string;baseUrl:string;model:string}){
 }
 
 export async function chat(messages:ChatMessage[],maxTokens=800):Promise<string>{
- const r=await request<{content:string}>('/api/chat',{method:'POST',body:JSON.stringify({messages,maxTokens})});
+ const r=await request<{content?:string}>('/api/chat',{method:'POST',body:JSON.stringify({messages,maxTokens})});
+ if(typeof r.content!=='string')throw new Error('Unexpected response from the local proxy — is the backend running?');
  return r.content;
 }
 

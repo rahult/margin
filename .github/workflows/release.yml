@@ -36,6 +36,30 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
+      - name: Install backend runtime dependencies
+        run: npm ci --prefix server
+
+      - name: Prune backend runtime (platform-specific)
+        shell: bash
+        run: |
+          rm -rf server/node_modules/sharp server/node_modules/@img server/node_modules/onnxruntime-web
+          case "${{ matrix.platform }}" in
+            macos-latest) rm -rf server/node_modules/onnxruntime-node/bin/napi-v3/linux server/node_modules/onnxruntime-node/bin/napi-v3/win32 ;;
+            ubuntu-22.04) rm -rf server/node_modules/onnxruntime-node/bin/napi-v3/darwin server/node_modules/onnxruntime-node/bin/napi-v3/win32 ;;
+            windows-latest) rm -rf server/node_modules/onnxruntime-node/bin/napi-v3/darwin server/node_modules/onnxruntime-node/bin/napi-v3/linux ;;
+          esac
+
+      - name: Stage node sidecar binary
+        shell: bash
+        run: |
+          mkdir -p src-tauri/binaries
+          NODE_BIN="$(which node || command -v node)"
+          case "${{ matrix.platform }}" in
+            macos-latest) cp "$NODE_BIN" src-tauri/binaries/node-aarch64-apple-darwin ;;
+            ubuntu-22.04) cp "$NODE_BIN" src-tauri/binaries/node-x86_64-unknown-linux-gnu ;;
+            windows-latest) cp "$NODE_BIN" src-tauri/binaries/node-x86_64-pc-windows-msvc.exe ;;
+          esac
+
       - name: Build and eval
         run: |
           npm run build

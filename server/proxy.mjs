@@ -7,7 +7,10 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const envPath = path.join(root, '.env');
+const envPath = process.env.MARGIN_ENV_PATH ?? path.join(root, '.env');
+// In the packaged desktop app these point at the OS app-data dir; locally they
+// default to the project root / server/data.
+const dataDir = process.env.MARGIN_DATA_DIR ?? path.join(root, 'server', 'data');
 
 const DEFAULTS = {
   LLM_API_KEY: '',
@@ -69,8 +72,8 @@ const status = () => ({
 
 // File-backed knowledge store: documents, margin notes, and review answers.
 // Shared with the MCP server (server/mcp.mjs) so coding agents can read what
-// the reader has distilled. Lives in server/data/ (gitignored).
-const dataDir = path.join(root, 'server', 'data');
+// the reader has distilled. Lives in server/data/ locally (gitignored), or in
+// the OS app-data dir when running inside the packaged desktop app.
 const store = {
   read(name, fallback) {
     try { return JSON.parse(fs.readFileSync(path.join(dataDir, name), 'utf8')); } catch { return fallback; }

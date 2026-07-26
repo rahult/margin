@@ -8,6 +8,7 @@ export function chunkText(t:string):string[]{
 export function createNarrator(){
  let audio:HTMLAudioElement|null=null;
  let abort:AbortController|null=null;
+ const BASE=typeof window!=='undefined'&&window.location.protocol==='tauri:'?'http://127.0.0.1:8787':'';
 
  const stop=()=>{
   abort?.abort();
@@ -16,7 +17,7 @@ export function createNarrator(){
  };
 
  const fetchWav=async(text:string,signal:AbortSignal):Promise<string>=>{
-  const r=await fetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text}),signal});
+  const r=await fetch(BASE+'/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text}),signal});
   if(!r.ok){
    const data=await r.json().catch(()=>({}));
    throw new Error((data as {error?:string}).error??`TTS request failed (${r.status})`);

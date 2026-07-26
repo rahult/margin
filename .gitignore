@@ -17,3 +17,7 @@ storybook-static/
 
 # Local knowledge store (user data)
 server/data/
+
+# Backend runtime deps (installed per platform in CI)
+server/node_modules/
+src-tauri/binaries/
