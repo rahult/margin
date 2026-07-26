@@ -40,4 +40,4 @@ export const putReview=(title:string,answers:string[])=>request<{ok:boolean}>(`/
 export const getMap=(title:string)=>request<{map:unknown}>(`/api/map?title=${encodeURIComponent(title)}`);
 export const putMap=(title:string,map:unknown)=>request<{ok:boolean}>(`/api/map?title=${encodeURIComponent(title)}`,{method:'PUT',body:JSON.stringify({map})});
 export type SkillStatus={installed:boolean;locations:{agent:string;path:string}[]};
-export const getSkillStatus=()=>request<SkillStatus>('/api/skill-status');
+export const getSkillStatus=()=>request<SkillStatus>('/api/skill-status',{signal:AbortSignal.timeout(5000)});
