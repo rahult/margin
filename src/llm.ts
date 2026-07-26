@@ -39,3 +39,5 @@ export const getReview=(title:string)=>request<{answers:string[]}>(`/api/review?
 export const putReview=(title:string,answers:string[])=>request<{ok:boolean}>(`/api/review?title=${encodeURIComponent(title)}`,{method:'PUT',body:JSON.stringify({answers})});
 export const getMap=(title:string)=>request<{map:unknown}>(`/api/map?title=${encodeURIComponent(title)}`);
 export const putMap=(title:string,map:unknown)=>request<{ok:boolean}>(`/api/map?title=${encodeURIComponent(title)}`,{method:'PUT',body:JSON.stringify({map})});
+export type SkillStatus={installed:boolean;locations:{agent:string;path:string}[]};
+export const getSkillStatus=()=>request<SkillStatus>('/api/skill-status');

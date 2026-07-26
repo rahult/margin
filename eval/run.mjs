@@ -111,7 +111,10 @@ console.log('\nagent skill');
 console.log('\nstore round-trip');
 {
   const {spawn} = await import('node:child_process');
-  const proxy = spawn('node', ['server/proxy.mjs'], {env: {...process.env, LLM_PROXY_PORT: '8797', MARGIN_DATA_DIR: fs.mkdtempSync('/tmp/margin-eval-')}, stdio: 'ignore'});
+  const fakeHome = fs.mkdtempSync('/tmp/margin-eval-home-');
+  fs.mkdirSync(path.join(fakeHome, '.agents', 'skills', 'margin'), {recursive: true});
+  fs.writeFileSync(path.join(fakeHome, '.agents', 'skills', 'margin', 'SKILL.md'), '---\nname: margin\n---\n');
+  const proxy = spawn('node', ['server/proxy.mjs'], {env: {...process.env, HOME: fakeHome, LLM_PROXY_PORT: '8797', MARGIN_DATA_DIR: fs.mkdtempSync('/tmp/margin-eval-')}, stdio: 'ignore'});
   const wait = (ms) => new Promise(r => setTimeout(r, ms));
   try {
     await wait(1200);
@@ -122,6 +125,8 @@ console.log('\nstore round-trip');
     check('library lists the pushed document', lib.documents.some(d => d.title === 'eval-store-doc'));
     const doc = await (await fetch(`${base}/api/document?title=eval-store-doc`)).json();
     check('GET /api/document returns the markdown', doc.md.includes('# Eval Doc'));
+    const skill = await (await fetch(`${base}/api/skill-status`)).json();
+    check('skill-status detects an installed skill', skill.installed === true && skill.locations.length === 1 && skill.locations[0].agent.includes('.agents'));
   } finally {
     proxy.kill();
   }

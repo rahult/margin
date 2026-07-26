@@ -3,6 +3,7 @@
 // to any OpenAI-compatible provider, so the key never ships to the frontend.
 import http from 'node:http';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
@@ -69,6 +70,24 @@ const status = () => ({
   model: config.LLM_MODEL,
   baseUrl: config.LLM_BASE_URL,
 });
+
+// Detect whether the margin agent skill is installed for known coding agents.
+// Each agent loads skills from <dir>/margin/SKILL.md in the user's home.
+const SKILL_LOCATIONS = [
+  {agent: 'Agent Skills runtimes (.agents)', rel: '.agents/skills/margin/SKILL.md'},
+  {agent: 'Claude Code', rel: '.claude/skills/margin/SKILL.md'},
+  {agent: 'GitHub Copilot', rel: '.copilot/skills/margin/SKILL.md'},
+  {agent: 'Gemini CLI', rel: '.gemini/skills/margin/SKILL.md'},
+];
+function skillStatus() {
+  const home = os.homedir();
+  const found = [];
+  for (const {agent, rel} of SKILL_LOCATIONS) {
+    const p = path.join(home, rel);
+    if (fs.existsSync(p)) found.push({agent, path: p});
+  }
+  return {installed: found.length > 0, locations: found};
+}
 
 // File-backed knowledge store: documents, margin notes, and review answers.
 // Shared with the MCP server (server/mcp.mjs) so coding agents can read what
@@ -216,6 +235,7 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'POST' && req.url === '/api/chat') return handleChat(req, res);
   if (req.method === 'POST' && req.url === '/api/tts') return handleTts(req, res);
   const url = new URL(req.url ?? '/', 'http://localhost');
+  if (req.method === 'GET' && url.pathname === '/api/skill-status') return send(res, 200, skillStatus());
   if (url.pathname.startsWith('/api/')) return handleStore(req, res, url);
   // Static: serve the built app (npm run build) so one process is the whole product.
   if (req.method === 'GET' && fs.existsSync(distDir)) return serveStatic(req, res, url);
