@@ -1,9 +1,10 @@
 import {useEffect,useRef,useState} from 'react';
 import {Button} from '@astryxdesign/core/Button';
-import {BookOpen,Brain,ChevronRight,Focus,FolderOpen,Headphones,MessageSquareText,Square,Sparkles,Target,X} from 'lucide-react';
+import {BookOpen,Brain,ChevronRight,Focus,FolderOpen,Headphones,MessageSquareText,Plug,Square,Sparkles,Target,X} from 'lucide-react';
 import {defaultDoc} from './data/rfc';
 import {parseMarkdown,type ParsedDoc} from './data/markdown';
 import {Onboarding} from './Onboarding';
+import {AgentsDialog} from './AgentsDialog';
 import {chat,getMap,getNotes,getReview,getStatus,library,getDocument,putDocument,putMap,putNotes,putReview,type Note} from './llm';
 import {parseArgumentMap,type ArgumentMap} from './argmap';
 import {createNarrator} from './tts';
@@ -21,7 +22,7 @@ export function App(){
  const [doc,setDoc]=useState<ParsedDoc>(defaultDoc);
  const [saved,setSaved]=useState<SavedProgress|null>(()=>loadProgress(defaultDoc.title,defaultDoc.sections.length));
  const [active,setActive]=useState(saved?.active??0); const [mode,setMode]=useState<Mode>('read'); const [listening,setListening]=useState(false); const [note,setNote]=useState(''); const [notes,setNotes]=useState<Note[]>([]); const [answers,setAnswers]=useState<string[]>([]); const article=useRef<HTMLElement>(null); const fileInput=useRef<HTMLInputElement>(null); const speechGen=useRef(0);
- const [ready,setReady]=useState(false); const [checking,setChecking]=useState(true); const [model,setModel]=useState(''); const [question,setQuestion]=useState(''); const [answer,setAnswer]=useState(''); const [asking,setAsking]=useState(false);
+ const [ready,setReady]=useState(false); const [checking,setChecking]=useState(true); const [model,setModel]=useState(''); const [question,setQuestion]=useState(''); const [answer,setAnswer]=useState(''); const [asking,setAsking]=useState(false); const [showAgents,setShowAgents]=useState(false);
  const [narrator]=useState(createNarrator);
  const {coins,earn,bursts,verdict,setVerdict}=useCoins();
  const listenStart=useRef(0); const listeningRef=useRef(false); const reviewClaimed=useRef(new Set<string>());
@@ -114,7 +115,7 @@ export function App(){
  if(!ready)return <Onboarding onDone={m=>{setModel(m);setReady(true)}}/>;
  return <div className={`app mode-${mode}`}>
   <input ref={fileInput} type="file" accept=".md,.markdown,.txt,text/markdown" hidden onChange={openFile}/>
-  <header className="topbar"><div className="brand"><div className="mark">M</div><span>Margin</span><em>{model||'local proxy'}</em></div><div className="doc-title"><BookOpen size={15}/> {doc.title}</div><div className="top-actions"><WalletPill coins={coins}/>{doc!==defaultDoc&&<button className="tool" onClick={()=>loadDoc(defaultDoc)}><X size={15}/> Close</button>}<button className="tool" onClick={()=>fileInput.current?.click()}><FolderOpen size={15}/> Open</button><Button label={mode==='focus'?'Exit focus':'Focus'} variant="secondary" onClick={()=>setMode(mode==='focus'?'read':'focus')}/></div></header>
+  <header className="topbar"><div className="brand"><div className="mark">M</div><span>Margin</span><em>{model||'local proxy'}</em></div><div className="doc-title"><BookOpen size={15}/> {doc.title}</div><div className="top-actions"><WalletPill coins={coins}/>{doc!==defaultDoc&&<button className="tool" onClick={()=>loadDoc(defaultDoc)}><X size={15}/> Close</button>}<button className="tool" onClick={()=>fileInput.current?.click()}><FolderOpen size={15}/> Open</button><button className="tool" title="Connect coding agents" onClick={()=>setShowAgents(true)}><Plug size={15}/> Agents</button><Button label={mode==='focus'?'Exit focus':'Focus'} variant="secondary" onClick={()=>setMode(mode==='focus'?'read':'focus')}/></div></header>
   <main className="workspace">
    <aside className="left-rail"><div className="rail-heading"><span>Reading map</span></div><div className="mission"><Target size={17}/><div><b>Your mission</b><p>{doc.mission}</p></div></div>{resumed&&<p className="resume">Picking up where you left off.</p>}<nav>{sections.map((s,i)=><button key={s.id} onClick={()=>setActive(i)} className={i===active?'active':''}><span className="step">{i<active?'✓':s.number}</span><span><b>{s.title}</b><small>{s.kind} · {s.minutes} min</small></span></button>)}</nav><div className="momentum"><div><span>Argument progress</span><b>{progress}%</b></div><div className="progress"><i style={{width:`${progress}%`}}/></div><small>{invested} of ~{totalMin} min invested</small></div><RenewalPanel coins={coins} onPreview={()=>setVerdict(settlePreview(coins))}/></aside>
    <section className="reader-shell"><div className="reader-toolbar"><div className="mode-tabs"><button className={mode==='read'?'active':''} onClick={()=>setMode('read')}>Read</button><button className={mode==='review'?'active':''} onClick={()=>setMode('review')}>Review</button></div><div><button className={`tool ${listening?'active':''}`} onClick={()=>listening?stopListening():startListening()}>{listening?<Square size={15}/>:<Headphones size={16}/>} {listening?'Stop':'Listen'}</button></div></div>
@@ -125,5 +126,6 @@ export function App(){
   </main>
   <CoinLayer bursts={bursts}/>
   {verdict&&<VerdictOverlay verdict={verdict} onClose={()=>setVerdict(null)}/>}
+  {showAgents&&<AgentsDialog onClose={()=>setShowAgents(false)}/>}
  </div>
 }

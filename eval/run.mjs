@@ -95,5 +95,37 @@ check('caps arrays at 4 items', (() => {
 check('returns null on garbage', parseArgumentMap('no json at all') === null);
 check('returns null when decision and reasons are empty', parseArgumentMap('{"decision":"","reasons":[],"alternatives":[],"tradeoffs":[]}') === null);
 
+// Agent skill (skills/margin/SKILL.md is installable via npx skills add).
+console.log('\nagent skill');
+{
+  const skillPath = path.resolve(fixturesDir, '..', '..', 'skills', 'margin', 'SKILL.md');
+  const skill = fs.readFileSync(skillPath, 'utf8');
+  check('SKILL.md exists', fs.existsSync(skillPath));
+  check('frontmatter names the skill', /^name:\s*margin\s*$/m.test(skill));
+  check('frontmatter has a real description', (skill.match(/^description:\s*(.+)$/m)?.[1] ?? '').length > 80);
+  check('documents the review trigger endpoint', skill.includes('PUT http://127.0.0.1:8787/api/document'));
+  check('documents the MCP tools', ['list_documents', 'get_document', 'search_notes', 'get_note'].every(t => skill.includes(t)));
+}
+
+// Store round-trip through a live proxy (what agents use to push documents).
+console.log('\nstore round-trip');
+{
+  const {spawn} = await import('node:child_process');
+  const proxy = spawn('node', ['server/proxy.mjs'], {env: {...process.env, LLM_PROXY_PORT: '8797', MARGIN_DATA_DIR: fs.mkdtempSync('/tmp/margin-eval-')}, stdio: 'ignore'});
+  const wait = (ms) => new Promise(r => setTimeout(r, ms));
+  try {
+    await wait(1200);
+    const base = 'http://127.0.0.1:8797';
+    const putRes = await fetch(`${base}/api/document`, {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({title: 'eval-store-doc', md: '# Eval Doc\n\n## A section\n\nBody.'})});
+    check('PUT /api/document accepts a document', putRes.ok);
+    const lib = await (await fetch(`${base}/api/library`)).json();
+    check('library lists the pushed document', lib.documents.some(d => d.title === 'eval-store-doc'));
+    const doc = await (await fetch(`${base}/api/document?title=eval-store-doc`)).json();
+    check('GET /api/document returns the markdown', doc.md.includes('# Eval Doc'));
+  } finally {
+    proxy.kill();
+  }
+}
+
 console.log(`\n${failures === 0 ? 'ALL CHECKS PASSED' : `${failures} CHECK(S) FAILED`} (fixtures + coin economy)`);
 process.exit(failures === 0 ? 0 : 1);

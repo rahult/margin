@@ -241,7 +241,7 @@ function serveStatic(req, res, url) {
   fs.createReadStream(target).pipe(res);
 }
 
-const port = Number(config.LLM_PROXY_PORT) || 8787;
+const port = Number(process.env.LLM_PROXY_PORT ?? config.LLM_PROXY_PORT) || 8787;
 server.listen(port, '127.0.0.1', () => {
   console.log(`margin listening on http://127.0.0.1:${port} (${config.LLM_API_KEY ? 'configured' : 'no API key yet — onboarding will ask'})`);
   if (fs.existsSync(distDir)) console.log('serving the app — open the URL above in a browser');
