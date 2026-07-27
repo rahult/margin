@@ -11,6 +11,8 @@ import {createNarrator} from './tts';
 import {CoinLayer,RenewalPanel,VerdictOverlay,WalletPill,useCoins} from './Wallet';
 import {claimSection,RULES,settlePreview} from './coins';
 import {parseSuggestions,type NoteRef,type Suggestion} from './links';
+import {checkForUpdate} from './updater';
+import {relaunch} from '@tauri-apps/plugin-process';
 
 type Mode='read'|'focus'|'review';
 type SavedProgress={active:number};
@@ -23,6 +25,8 @@ export function App(){
  const [saved,setSaved]=useState<SavedProgress|null>(()=>loadProgress(defaultDoc.title,defaultDoc.sections.length));
  const [active,setActive]=useState(saved?.active??0); const [mode,setMode]=useState<Mode>('read'); const [listening,setListening]=useState(false); const [note,setNote]=useState(''); const [notes,setNotes]=useState<Note[]>([]); const [answers,setAnswers]=useState<string[]>([]); const article=useRef<HTMLElement>(null); const fileInput=useRef<HTMLInputElement>(null); const speechGen=useRef(0);
  const [ready,setReady]=useState(false); const [checking,setChecking]=useState(true); const [model,setModel]=useState(''); const [question,setQuestion]=useState(''); const [answer,setAnswer]=useState(''); const [asking,setAsking]=useState(false); const [showAgents,setShowAgents]=useState(false);
+ const [updateReady,setUpdateReady]=useState<string|null>(null);
+ useEffect(()=>{checkForUpdate(setUpdateReady)},[]);
  const [narrator]=useState(createNarrator);
  const {coins,earn,bursts,verdict,setVerdict}=useCoins();
  const listenStart=useRef(0); const listeningRef=useRef(false); const reviewClaimed=useRef(new Set<string>());
@@ -125,6 +129,7 @@ export function App(){
    <aside className="right-rail"><div className="rail-heading"><span>Thinking companion</span></div><section className="prompt-card"><div className="label"><Sparkles size={15}/> Before this section</div><h3>{current.question}</h3><button onClick={()=>setNote(current.question+' ')}>Capture a thought <ChevronRight size={14}/></button></section><section className="ask"><div className="label"><MessageSquareText size={15}/> Ask the companion</div>{answer&&<p className="answer">{answer}</p>}<textarea value={question} onChange={e=>setQuestion(e.target.value)} placeholder="Ask anything about this section…"/><button onClick={ask} disabled={asking||!question.trim()}>{asking?'Thinking…':'Ask'}</button></section><section className="argmap"><div className="label"><Brain size={15}/> Argument map</div>{argMap?<div className="map-body"><div className="map-row"><b>Decision</b><input value={argMap.decision} onChange={e=>editMapField('decision',e.target.value)} onBlur={()=>saveMap(argMap)} placeholder="What the document concludes…"/></div>{([['reasons','Reasons'],['alternatives','Set aside'],['tradeoffs','Trade-offs']] as const).map(([f,label])=><div className="map-row" key={f}><b>{label}</b>{argMap[f].length===0&&<span className="map-empty">—</span>}{argMap[f].map((item,i)=><input key={i} value={item} onChange={e=>editMapItem(f,i,e.target.value)} onBlur={()=>saveMap(argMap)}/>)}</div>)}<button className="ghost" onClick={generateMap} disabled={mapping}>{mapping?'Mapping…':'Regenerate'}</button></div>:<button onClick={generateMap} disabled={mapping}>{mapping?'Mapping the argument…':'Map the argument'}</button>}</section><section className="notes"><div className="label"><MessageSquareText size={15}/> Margin notes</div><textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="Write what you think, not what the document says…"/><button onClick={addNote}>Save note</button>{notes.map(n=><div className="note-card" key={n.id}><p>{n.text}</p>{n.sectionId&&<small>on {sections.find(s=>s.id===n.sectionId)?.title??'this section'}</small>}{(n.links??[]).map(l=><span className="note-link" key={l.docTitle+l.noteId} title={l.excerpt}>↔ {l.docTitle}</span>)}{(suggestions[n.id]??[]).map(s=><div className="link-suggestion" key={s.noteId}><span>Link to <b>{s.title}</b>: “{s.excerpt}…” — {s.reason}</span><div><button onClick={()=>confirmLink(n.id,s)}>Link</button><button className="ghost" onClick={()=>dismissLink(n.id)}>Dismiss</button></div></div>)}</div>)}</section>{doc.takeaways&&<section className="takeaways"><div className="label"><Focus size={15}/> Emerging model</div>{doc.takeaways.map(s=><div className="takeaway" key={s}><span>•</span>{s}</div>)}</section>}</aside>
   </main>
   <CoinLayer bursts={bursts}/>
+  {updateReady&&<button className="tool" style={{position:'fixed',bottom:16,right:16,zIndex:60}} onClick={()=>relaunch()}>Restart for v{updateReady}</button>}
   {verdict&&<VerdictOverlay verdict={verdict} onClose={()=>setVerdict(null)}/>}
   {showAgents&&<AgentsDialog onClose={()=>setShowAgents(false)}/>}
  </div>

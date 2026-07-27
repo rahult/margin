@@ -115,7 +115,7 @@ console.log('\nstore round-trip');
   const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'margin-eval-home-'));
   fs.mkdirSync(path.join(fakeHome, '.agents', 'skills', 'margin'), {recursive: true});
   fs.writeFileSync(path.join(fakeHome, '.agents', 'skills', 'margin', 'SKILL.md'), '---\nname: margin\n---\n');
-  const proxy = spawn('node', ['server/proxy.mjs'], {env: {...process.env, HOME: fakeHome, LLM_PROXY_PORT: '8797', MARGIN_DATA_DIR: fs.mkdtempSync(path.join(os.tmpdir(), 'margin-eval-'))}, stdio: 'ignore'});
+  const proxy = spawn('node', ['server/proxy.mjs'], {env: {...process.env, HOME: fakeHome, USERPROFILE: fakeHome, LLM_PROXY_PORT: '8797', MARGIN_DATA_DIR: fs.mkdtempSync(path.join(os.tmpdir(), 'margin-eval-'))}, stdio: 'ignore'});
   const wait = (ms) => new Promise(r => setTimeout(r, ms));
   try {
     await wait(1200);
