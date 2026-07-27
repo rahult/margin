@@ -48,10 +48,35 @@ jobs:
         run: |
           rm -rf server/node_modules/sharp server/node_modules/@img server/node_modules/onnxruntime-web
           case "${{ matrix.platform }}" in
-            macos-latest) rm -rf server/node_modules/onnxruntime-node/bin/napi-v3/linux server/node_modules/onnxruntime-node/bin/napi-v3/win32 ;;
+            macos-latest) rm -rf server/node_modules/onnxruntime-node/bin/napi-v3/linux server/node_modules/onnxruntime-node/bin/napi-v3/win32 server/node_modules/onnxruntime-node/bin/napi-v3/darwin/x64 ;;
             ubuntu-22.04) rm -rf server/node_modules/onnxruntime-node/bin/napi-v3/darwin server/node_modules/onnxruntime-node/bin/napi-v3/win32 ;;
             windows-latest) rm -rf server/node_modules/onnxruntime-node/bin/napi-v3/darwin server/node_modules/onnxruntime-node/bin/napi-v3/linux ;;
           esac
+
+      # Tauri signs the app bundle and sidecars, but resources under
+      # server/node_modules are copied verbatim — their Mach-O files must
+      # already carry a Developer ID signature or notarization rejects the app.
+      - name: Import Apple signing certificate
+        if: matrix.platform == 'macos-latest'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          echo "$APPLE_CERTIFICATE" | base64 --decode > /tmp/certificate.p12
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security import /tmp/certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" build.keychain
+          rm /tmp/certificate.p12
+
+      - name: Sign bundled native modules
+        if: matrix.platform == 'macos-latest'
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+        run: |
+          find server/node_modules \( -name "*.dylib" -o -name "*.node" \) -type f \
+            -exec codesign --force --timestamp --options runtime --sign "$APPLE_SIGNING_IDENTITY" {} \;
 
       - name: Stage node sidecar binary
         shell: bash

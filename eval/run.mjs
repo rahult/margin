@@ -1,6 +1,7 @@
 // Eval: parse every markdown fixture and assert the reading-model structure.
 // Run: npm run eval
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {parseMarkdown} from '../src/data/markdown.ts';
@@ -111,10 +112,10 @@ console.log('\nagent skill');
 console.log('\nstore round-trip');
 {
   const {spawn} = await import('node:child_process');
-  const fakeHome = fs.mkdtempSync('/tmp/margin-eval-home-');
+  const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'margin-eval-home-'));
   fs.mkdirSync(path.join(fakeHome, '.agents', 'skills', 'margin'), {recursive: true});
   fs.writeFileSync(path.join(fakeHome, '.agents', 'skills', 'margin', 'SKILL.md'), '---\nname: margin\n---\n');
-  const proxy = spawn('node', ['server/proxy.mjs'], {env: {...process.env, HOME: fakeHome, LLM_PROXY_PORT: '8797', MARGIN_DATA_DIR: fs.mkdtempSync('/tmp/margin-eval-')}, stdio: 'ignore'});
+  const proxy = spawn('node', ['server/proxy.mjs'], {env: {...process.env, HOME: fakeHome, LLM_PROXY_PORT: '8797', MARGIN_DATA_DIR: fs.mkdtempSync(path.join(os.tmpdir(), 'margin-eval-'))}, stdio: 'ignore'});
   const wait = (ms) => new Promise(r => setTimeout(r, ms));
   try {
     await wait(1200);
