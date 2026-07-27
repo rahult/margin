@@ -139,5 +139,5 @@ console.log('\nstore round-trip');
 console.log(`\n${failures === 0 ? 'ALL CHECKS PASSED' : `${failures} CHECK(S) FAILED`} (fixtures + coin economy)`);
 // The killed proxy leaves sockets mid-teardown; exiting in that window trips
 // a libuv assertion (win/async.c) on Windows. Let the loop settle first.
-await wait(1500);
+await new Promise(r => setTimeout(r, 1500));
 process.exit(failures === 0 ? 0 : 1);
