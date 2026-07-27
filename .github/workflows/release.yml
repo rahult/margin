@@ -72,3 +72,24 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: "Margin ${{ github.ref_name }}"
           releaseDraft: true
+
+      # Stable, unversioned aliases so the site can link
+      # releases/latest/download/<name> directly to the current build.
+      - name: Publish stable-named download aliases
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          mkdir -p /tmp/alias
+          case "${{ matrix.platform }}" in
+            macos-latest)
+              cp src-tauri/target/release/bundle/dmg/*.dmg /tmp/alias/Margin-macOS-aarch64.dmg ;;
+            windows-latest)
+              cp src-tauri/target/release/bundle/msi/*.msi /tmp/alias/Margin-Windows-x64.msi
+              cp src-tauri/target/release/bundle/nsis/*-setup.exe /tmp/alias/Margin-Windows-x64-setup.exe ;;
+            ubuntu-22.04)
+              cp src-tauri/target/release/bundle/deb/*.deb /tmp/alias/Margin-Linux-amd64.deb
+              cp src-tauri/target/release/bundle/rpm/*.rpm /tmp/alias/Margin-Linux-x86_64.rpm ;;
+          esac
+          gh release upload "${{ github.ref_name }}" /tmp/alias/* --clobber
