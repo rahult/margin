@@ -130,6 +130,9 @@ console.log('\nstore round-trip');
     check('skill-status detects an installed skill', skill.installed === true && skill.locations.length === 1 && skill.locations[0].agent.includes('.agents'));
   } finally {
     proxy.kill();
+    // Let the child fully exit before we do — exiting with handles mid-close
+    // trips a libuv assertion (win/async.c) on Windows runners.
+    await Promise.race([new Promise(r => proxy.once('exit', r)), wait(2000)]);
   }
 }
 
