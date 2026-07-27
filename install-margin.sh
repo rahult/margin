@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # Install Margin (macOS, Apple Silicon) from the latest GitHub release.
-# The app is an unsigned preview build, so this also removes the Gatekeeper
-# quarantine flag — without it macOS reports the app as "damaged".
+# Builds are signed and notarized, so no Gatekeeper workaround is needed.
 set -euo pipefail
 
 APP="Margin.app"
@@ -21,8 +20,5 @@ mkdir -p "${DEST}"
 rm -rf "${DEST}/${APP}"
 cp -R "${MNT}/${APP}" "${DEST}/${APP}"
 hdiutil detach -quiet "${MNT}" || true
-
-echo "↳ Clearing quarantine flag…"
-xattr -cr "${DEST}/${APP}"
 
 echo "✓ Margin installed at ${DEST}/${APP} — open it from Launchpad or Spotlight."
