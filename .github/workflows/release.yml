@@ -70,7 +70,7 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "Margin ${{ github.ref_name }}"
-          releaseDraft: true
+          releaseDraft: false
 
       # Stable, unversioned aliases so the site can link
       # releases/latest/download/<name> directly to the current build.
