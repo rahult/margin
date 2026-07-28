@@ -174,7 +174,9 @@ async function handleChat(req, res) {
   let body;
   try { body = await readBody(req); } catch { return send(res, 400, {error: 'Invalid JSON body.'}); }
   if (!Array.isArray(body.messages)) return send(res, 400, {error: 'Body must include messages[].'});
-  const url = `${config.LLM_BASE_URL.replace(/\/$/, '')}/chat/completions`;
+  // Tolerate users pasting the full endpoint (.../chat/completions or .../chat).
+  const base = config.LLM_BASE_URL.replace(/\/+$/, '').replace(/\/chat(\/completions)?$/, '');
+  const url = `${base}/chat/completions`;
   try {
     const upstream = await fetch(url, {
       method: 'POST',
