@@ -18,7 +18,7 @@ For development, `npm run dev` runs Vite on :1420 and proxies `/api` to the back
 
 - **LLM proxy** — `/api/chat` injects model + key server-side; `/api/config` writes `.env` from onboarding. The key never reaches the frontend bundle.
 - **Knowledge store** — JSON files in `server/data/` (gitignored): documents, margin notes, review answers, argument maps. Shared by the app (via `/api/library` et al.) and the MCP server (via the filesystem).
-- **TTS** — Kokoro-82M via kokoro-js/ONNX (`/api/tts`), model cached locally after first download; frontend plays sentence-chunked audio with one-chunk prefetch (`src/tts.ts`).
+- **TTS** — narration is delegated to Chirp (127.0.0.1:8789, chirp.rahultrikha.com), the standalone on-device speech server; the frontend plays sentence-chunked audio with one-chunk prefetch (`src/tts.ts`). Margin ships no speech model of its own.
 
 ## Frontend structure
 

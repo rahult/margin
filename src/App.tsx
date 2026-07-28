@@ -26,6 +26,7 @@ export function App(){
  const [active,setActive]=useState(saved?.active??0); const [mode,setMode]=useState<Mode>('read'); const [listening,setListening]=useState(false); const [note,setNote]=useState(''); const [notes,setNotes]=useState<Note[]>([]); const [answers,setAnswers]=useState<string[]>([]); const article=useRef<HTMLElement>(null); const fileInput=useRef<HTMLInputElement>(null); const speechGen=useRef(0);
  const [ready,setReady]=useState(false); const [checking,setChecking]=useState(true); const [model,setModel]=useState(''); const [question,setQuestion]=useState(''); const [answer,setAnswer]=useState(''); const [asking,setAsking]=useState(false); const [showAgents,setShowAgents]=useState(false);
  const [updateReady,setUpdateReady]=useState<string|null>(null);
+ const [listenError,setListenError]=useState('');
  useEffect(()=>{checkForUpdate(setUpdateReady)},[]);
  const [narrator]=useState(createNarrator);
  const {coins,earn,bursts,verdict,setVerdict}=useCoins();
@@ -54,7 +55,7 @@ export function App(){
   const isCurrent=()=>speechGen.current===gen;
   narrator.narrate(sectionText(active),isCurrent)
    .then(()=>{if(!isCurrent())return; if(active+1<sections.length)setActive(active+1); else setListening(false)})
-   .catch(e=>{console.error('narration failed:',e); if(isCurrent())setListening(false)});
+   .catch(e=>{console.error('narration failed:',e); if(isCurrent()){setListening(false);setListenError(e instanceof Error?e.message:String(e))}});
  },[active,listening]);
  const loadDoc=async(d:ParsedDoc,md?:string)=>{
   stopListening();
@@ -97,7 +98,7 @@ export function App(){
  const dismissLink=(noteId:string)=>setSuggestions(v=>{const {[noteId]:_,...rest}=v;return rest});
  const next=()=>{if(claimSection(doc.title,current.id))earnFromEl(RULES.section,'.section-nav .next');if(active===sections.length-1){setMode('review');return}setActive(v=>Math.min(sections.length-1,v+1))};
  const prev=()=>setActive(v=>Math.max(0,v-1));
- const startListening=()=>{listeningRef.current=true;listenStart.current=Date.now();setListening(true)};
+ const startListening=()=>{listeningRef.current=true;listenStart.current=Date.now();setListenError('');setListening(true)};
  const blurAnswer=(i:number,value:string)=>{
   const nextAnswers=doc.review.map((_,j)=>j===i?value:(answers[j]??''));
   setAnswers(nextAnswers); putReview(doc.title,nextAnswers).catch(()=>{});
@@ -122,7 +123,7 @@ export function App(){
   <header className="topbar"><div className="brand"><div className="mark">M</div><span>Margin</span><em>{model||'local proxy'}</em></div><div className="doc-title"><BookOpen size={15}/> {doc.title}</div><div className="top-actions"><WalletPill coins={coins}/>{doc!==defaultDoc&&<button className="tool" onClick={()=>loadDoc(defaultDoc)}><X size={15}/> Close</button>}<button className="tool" onClick={()=>fileInput.current?.click()}><FolderOpen size={15}/> Open</button><button className="tool" title="Connect coding agents" onClick={()=>setShowAgents(true)}><Plug size={15}/> Agents</button><Button label={mode==='focus'?'Exit focus':'Focus'} variant="secondary" onClick={()=>setMode(mode==='focus'?'read':'focus')}/></div></header>
   <main className="workspace">
    <aside className="left-rail"><div className="rail-heading"><span>Reading map</span></div><div className="mission"><Target size={17}/><div><b>Your mission</b><p>{doc.mission}</p></div></div>{resumed&&<p className="resume">Picking up where you left off.</p>}<nav>{sections.map((s,i)=><button key={s.id} onClick={()=>setActive(i)} className={i===active?'active':''}><span className="step">{i<active?'✓':s.number}</span><span><b>{s.title}</b><small>{s.kind} · {s.minutes} min</small></span></button>)}</nav><div className="momentum"><div><span>Argument progress</span><b>{progress}%</b></div><div className="progress"><i style={{width:`${progress}%`}}/></div><small>{invested} of ~{totalMin} min invested</small></div><RenewalPanel coins={coins} onPreview={()=>setVerdict(settlePreview(coins))}/></aside>
-   <section className="reader-shell"><div className="reader-toolbar"><div className="mode-tabs"><button className={mode==='read'?'active':''} onClick={()=>setMode('read')}>Read</button><button className={mode==='review'?'active':''} onClick={()=>setMode('review')}>Review</button></div><div><button className={`tool ${listening?'active':''}`} onClick={()=>listening?stopListening():startListening()}>{listening?<Square size={15}/>:<Headphones size={16}/>} {listening?'Stop':'Listen'}</button></div></div>
+   <section className="reader-shell"><div className="reader-toolbar"><div className="mode-tabs"><button className={mode==='read'?'active':''} onClick={()=>setMode('read')}>Read</button><button className={mode==='review'?'active':''} onClick={()=>setMode('review')}>Review</button></div><div><button className={`tool ${listening?'active':''}`} onClick={()=>listening?stopListening():startListening()}>{listening?<Square size={15}/>:<Headphones size={16}/>} {listening?'Stop':'Listen'}</button>{listenError&&<span style={{fontSize:12,color:'#c9a86a',maxWidth:240}}>{listenError}</span>}</div></div>
     {mode==='review'?<div className="review-screen"><div className="review-header"><h1>Check your understanding</h1><p>Answer from memory — retrieval is what makes the reading stick.</p></div>{doc.review.map((q,i)=><div className="challenge" key={q}><span>0{i+1}</span><div><b>{q}</b><textarea value={answers[i]??''} onChange={e=>setAnswers(v=>doc.review.map((_,j)=>j===i?e.target.value:(v[j]??'')))} onBlur={e=>blurAnswer(i,e.target.value)} placeholder="Answer in your own words…"/></div></div>)}</div>:<article ref={article} className="document" dangerouslySetInnerHTML={{__html:doc.html}}/>}
     <div className="section-nav"><button disabled={active===0} onClick={prev}>Previous</button><span>{remaining===0?'Final idea':`${remaining} idea${remaining>1?'s':''} to go`}</span><button className="next" onClick={next}>{active===sections.length-1?'Start review':'Next idea'} <ChevronRight size={16}/></button></div>
    </section>

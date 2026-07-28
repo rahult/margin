@@ -1,25 +1,12 @@
-// Local neural TTS playback: sentence chunks → local speech server → audio.
-// Prefers a running Chirp app (127.0.0.1:8789) so one speech engine is shared
-// across apps; falls back to Margin's embedded proxy (8787). Fully local:
-// the server runs a Kokoro model on-device; no audio leaves the machine.
+// Local neural TTS playback via Chirp — the shared on-device speech server
+// (127.0.0.1:8789, chirp.rahultrikha.com). Sentence chunks → /api/tts → audio.
+// No audio leaves the machine.
 
 export function chunkText(t:string):string[]{
  return t.replace(/\s+/g,' ').match(/[^.!?]+[.!?]+[\]"'”’)]*\s*|\S[^.!?]*$/g)?.map(s=>s.trim()).filter(Boolean)??[];
 }
 
-const IN_TAURI=typeof window!=='undefined'&&window.location.protocol==='tauri:';
-const CANDIDATES=IN_TAURI?['http://127.0.0.1:8789','http://127.0.0.1:8787']:[''];
-let resolved:string|null=null;
-
-async function ttsBase(signal:AbortSignal):Promise<string>{
- if(resolved!==null)return resolved;
- for(const b of CANDIDATES){
-  if(!b)return b; // browser dev: same origin
-  try{const r=await fetch(b+'/api/health',{signal});if(r.ok){resolved=b;return b}}catch{/* try next */}
- }
- resolved=CANDIDATES[CANDIDATES.length-1];
- return resolved;
-}
+const BASE=typeof window!=='undefined'&&window.location.protocol==='tauri:'?'http://127.0.0.1:8789':'';
 
 export function createNarrator(){
  let audio:HTMLAudioElement|null=null;
@@ -32,8 +19,8 @@ export function createNarrator(){
  };
 
  const fetchWav=async(text:string,signal:AbortSignal):Promise<string>=>{
-  const base=await ttsBase(signal);
-  const r=await fetch(base+'/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text}),signal});
+  const r=await fetch(BASE+'/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text}),signal})
+   .catch(()=>{throw new Error('Chirp isn’t running. Install it from chirp.rahultrikha.com to listen.')});
   if(!r.ok){
    const data=await r.json().catch(()=>({}));
    throw new Error((data as {error?:string}).error??`TTS request failed (${r.status})`);
