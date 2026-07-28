@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
 import {Button} from '@astryxdesign/core/Button';
-import {BookOpen,Brain,ChevronRight,Focus,FolderOpen,Headphones,MessageSquareText,Plug,Square,Sparkles,Target,X} from 'lucide-react';
+import {BookOpen,Brain,Bird,ChevronRight,Focus,FolderOpen,Headphones,MessageSquareText,Plug,Square,Sparkles,Target,X} from 'lucide-react';
 import {defaultDoc} from './data/rfc';
 import {parseMarkdown,type ParsedDoc} from './data/markdown';
 import {Onboarding} from './Onboarding';
@@ -12,6 +12,7 @@ import {CoinLayer,RenewalPanel,VerdictOverlay,WalletPill,useCoins} from './Walle
 import {claimSection,RULES,settlePreview} from './coins';
 import {parseSuggestions,type NoteRef,type Suggestion} from './links';
 import {checkForUpdate} from './updater';
+import {chirpAvailable} from './tts';
 import {relaunch} from '@tauri-apps/plugin-process';
 
 type Mode='read'|'focus'|'review';
@@ -26,7 +27,7 @@ export function App(){
  const [active,setActive]=useState(saved?.active??0); const [mode,setMode]=useState<Mode>('read'); const [listening,setListening]=useState(false); const [note,setNote]=useState(''); const [notes,setNotes]=useState<Note[]>([]); const [answers,setAnswers]=useState<string[]>([]); const article=useRef<HTMLElement>(null); const fileInput=useRef<HTMLInputElement>(null); const speechGen=useRef(0);
  const [ready,setReady]=useState(false); const [checking,setChecking]=useState(true); const [model,setModel]=useState(''); const [question,setQuestion]=useState(''); const [answer,setAnswer]=useState(''); const [asking,setAsking]=useState(false); const [showAgents,setShowAgents]=useState(false);
  const [updateReady,setUpdateReady]=useState<string|null>(null);
- const [listenError,setListenError]=useState('');
+ const [chirpPrompt,setChirpPrompt]=useState<'closed'|'open'|'miss'>('closed');
  useEffect(()=>{checkForUpdate(setUpdateReady)},[]);
  const [narrator]=useState(createNarrator);
  const {coins,earn,bursts,verdict,setVerdict}=useCoins();
@@ -55,7 +56,7 @@ export function App(){
   const isCurrent=()=>speechGen.current===gen;
   narrator.narrate(sectionText(active),isCurrent)
    .then(()=>{if(!isCurrent())return; if(active+1<sections.length)setActive(active+1); else setListening(false)})
-   .catch(e=>{console.error('narration failed:',e); if(isCurrent()){setListening(false);setListenError(e instanceof Error?e.message:String(e))}});
+   .catch(e=>{console.error('narration failed:',e); if(isCurrent()){setListening(false);if(e instanceof Error&&e.message.startsWith('Chirp'))setChirpPrompt('open')}});
  },[active,listening]);
  const loadDoc=async(d:ParsedDoc,md?:string)=>{
   stopListening();
@@ -98,7 +99,15 @@ export function App(){
  const dismissLink=(noteId:string)=>setSuggestions(v=>{const {[noteId]:_,...rest}=v;return rest});
  const next=()=>{if(claimSection(doc.title,current.id))earnFromEl(RULES.section,'.section-nav .next');if(active===sections.length-1){setMode('review');return}setActive(v=>Math.min(sections.length-1,v+1))};
  const prev=()=>setActive(v=>Math.max(0,v-1));
- const startListening=()=>{listeningRef.current=true;listenStart.current=Date.now();setListenError('');setListening(true)};
+ const startListening=()=>{listeningRef.current=true;listenStart.current=Date.now();setListening(true)};
+ // Listen requires the Chirp app running; probe first so the popover can teach.
+ const tryListen=async()=>{
+  if(chirpPrompt!=='closed'){setChirpPrompt('closed');return}
+  if(await chirpAvailable())startListening(); else setChirpPrompt('open');
+ };
+ const retryChirp=async()=>{
+  if(await chirpAvailable()){setChirpPrompt('closed');startListening()} else setChirpPrompt('miss');
+ };
  const blurAnswer=(i:number,value:string)=>{
   const nextAnswers=doc.review.map((_,j)=>j===i?value:(answers[j]??''));
   setAnswers(nextAnswers); putReview(doc.title,nextAnswers).catch(()=>{});
@@ -123,7 +132,15 @@ export function App(){
   <header className="topbar"><div className="brand"><div className="mark">M</div><span>Margin</span><em>{model||'local proxy'}</em></div><div className="doc-title"><BookOpen size={15}/> {doc.title}</div><div className="top-actions"><WalletPill coins={coins}/>{doc!==defaultDoc&&<button className="tool" onClick={()=>loadDoc(defaultDoc)}><X size={15}/> Close</button>}<button className="tool" onClick={()=>fileInput.current?.click()}><FolderOpen size={15}/> Open</button><button className="tool" title="Connect coding agents" onClick={()=>setShowAgents(true)}><Plug size={15}/> Agents</button><Button label={mode==='focus'?'Exit focus':'Focus'} variant="secondary" onClick={()=>setMode(mode==='focus'?'read':'focus')}/></div></header>
   <main className="workspace">
    <aside className="left-rail"><div className="rail-heading"><span>Reading map</span></div><div className="mission"><Target size={17}/><div><b>Your mission</b><p>{doc.mission}</p></div></div>{resumed&&<p className="resume">Picking up where you left off.</p>}<nav>{sections.map((s,i)=><button key={s.id} onClick={()=>setActive(i)} className={i===active?'active':''}><span className="step">{i<active?'✓':s.number}</span><span><b>{s.title}</b><small>{s.kind} · {s.minutes} min</small></span></button>)}</nav><div className="momentum"><div><span>Argument progress</span><b>{progress}%</b></div><div className="progress"><i style={{width:`${progress}%`}}/></div><small>{invested} of ~{totalMin} min invested</small></div><RenewalPanel coins={coins} onPreview={()=>setVerdict(settlePreview(coins))}/></aside>
-   <section className="reader-shell"><div className="reader-toolbar"><div className="mode-tabs"><button className={mode==='read'?'active':''} onClick={()=>setMode('read')}>Read</button><button className={mode==='review'?'active':''} onClick={()=>setMode('review')}>Review</button></div><div><button className={`tool ${listening?'active':''}`} onClick={()=>listening?stopListening():startListening()}>{listening?<Square size={15}/>:<Headphones size={16}/>} {listening?'Stop':'Listen'}</button>{listenError&&<span style={{fontSize:12,color:'#c9a86a',maxWidth:240}}>{listenError}</span>}</div></div>
+   <section className="reader-shell"><div className="reader-toolbar"><div className="mode-tabs"><button className={mode==='read'?'active':''} onClick={()=>setMode('read')}>Read</button><button className={mode==='review'?'active':''} onClick={()=>setMode('review')}>Review</button></div><div style={{position:'relative'}}><button className={`tool ${listening?'active':''}`} onClick={()=>listening?stopListening():tryListen()}>{listening?<Square size={15}/>:<Headphones size={16}/>} {listening?'Stop':'Listen'}</button>{chirpPrompt!=='closed'&&!listening&&<div className="chirp-pop">
+      <h4><Bird size={17}/> Hear this document</h4>
+      <p>Reading aloud is powered by <b>Chirp</b> — a tiny menu-bar companion that speaks text fully on your machine. Install it once, and Margin can read to you.</p>
+      <div className="chirp-actions">
+       <a className="chirp-get" href="https://chirp.rahultrikha.com" target="_blank" rel="noreferrer">Download Chirp</a>
+       <button className="chirp-retry" onClick={retryChirp}>I’ve installed it — try again</button>
+      </div>
+      {chirpPrompt==='miss'&&<p className="chirp-miss">Still can’t reach Chirp — check it’s running in the menu bar.</p>}
+     </div>}</div></div>
     {mode==='review'?<div className="review-screen"><div className="review-header"><h1>Check your understanding</h1><p>Answer from memory — retrieval is what makes the reading stick.</p></div>{doc.review.map((q,i)=><div className="challenge" key={q}><span>0{i+1}</span><div><b>{q}</b><textarea value={answers[i]??''} onChange={e=>setAnswers(v=>doc.review.map((_,j)=>j===i?e.target.value:(v[j]??'')))} onBlur={e=>blurAnswer(i,e.target.value)} placeholder="Answer in your own words…"/></div></div>)}</div>:<article ref={article} className="document" dangerouslySetInnerHTML={{__html:doc.html}}/>}
     <div className="section-nav"><button disabled={active===0} onClick={prev}>Previous</button><span>{remaining===0?'Final idea':`${remaining} idea${remaining>1?'s':''} to go`}</span><button className="next" onClick={next}>{active===sections.length-1?'Start review':'Next idea'} <ChevronRight size={16}/></button></div>
    </section>

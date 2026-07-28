@@ -8,6 +8,15 @@ export function chunkText(t:string):string[]{
 
 const BASE=typeof window!=='undefined'&&window.location.protocol==='tauri:'?'http://127.0.0.1:8789':'';
 
+// Is the Chirp app up? Fast probe — drives the Listen button's install prompt.
+export async function chirpAvailable():Promise<boolean>{
+ if(!BASE)return true; // browser dev: same-origin proxy
+ try{
+  const r=await fetch(BASE+'/api/health',{signal:AbortSignal.timeout(800)});
+  return r.ok;
+ }catch{return false}
+}
+
 export function createNarrator(){
  let audio:HTMLAudioElement|null=null;
  let abort:AbortController|null=null;

@@ -108,3 +108,18 @@
 .skill-status.warn{background:#33301f;color:#d9c47a;border:1px solid #4a4436}
 .skill-status .recheck{margin-left:auto;border:0;background:transparent;color:inherit;cursor:pointer;padding:2px;opacity:.7}
 .skill-status .recheck:hover{opacity:1}
+
+/* Chirp install prompt — anchored popover under Listen; calm, editorial. */
+.chirp-pop{position:absolute;top:calc(100% + 8px);right:0;width:302px;background:#242624;border:1px solid #333733;border-radius:12px;padding:18px 18px 16px;box-shadow:0 14px 34px rgba(0,0,0,.4);z-index:40;animation:chirp-in .18s cubic-bezier(.22,.61,.36,1)}
+@keyframes chirp-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.chirp-pop h4{display:flex;align-items:center;gap:8px;font-family:"Newsreader",Georgia,serif;font-style:italic;font-weight:500;font-size:16.5px;color:#e8ebe5}
+.chirp-pop h4 svg{color:#9ccdb2;flex:none}
+.chirp-pop p{font-size:13px;line-height:1.5;color:#a9aea7;margin:9px 0 0}
+.chirp-pop p b{color:#c9cec5;font-weight:600}
+.chirp-actions{display:flex;align-items:center;gap:16px;margin-top:14px}
+.chirp-get{display:inline-block;background:#2f6b52;color:#eef4ef;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;transition:background .15s ease-out}
+.chirp-get:hover{background:#3a7d60}
+.chirp-retry{border:0;background:transparent;color:#9ccdb2;font-size:13px;cursor:pointer;padding:0}
+.chirp-retry:hover{color:#bfe3cd}
+.chirp-miss{font-family:"Newsreader",Georgia,serif;font-style:italic;font-size:12.5px;color:#7fa58f;margin-top:11px}
+@media (prefers-reduced-motion:reduce){.chirp-pop{animation:none}}
