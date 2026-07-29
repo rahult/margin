@@ -13,6 +13,7 @@ import {claimSection,RULES,settlePreview} from './coins';
 import {parseSuggestions,type NoteRef,type Suggestion} from './links';
 import {checkForUpdate} from './updater';
 import {chirpAvailable} from './tts';
+import {getConsent,setConsent,track} from './telemetry';
 import {relaunch} from '@tauri-apps/plugin-process';
 
 type Mode='read'|'focus'|'review';
@@ -28,7 +29,10 @@ export function App(){
  const [ready,setReady]=useState(false); const [checking,setChecking]=useState(true); const [model,setModel]=useState(''); const [question,setQuestion]=useState(''); const [answer,setAnswer]=useState(''); const [asking,setAsking]=useState(false); const [showAgents,setShowAgents]=useState(false);
  const [updateReady,setUpdateReady]=useState<string|null>(null);
  const [chirpPrompt,setChirpPrompt]=useState<'closed'|'open'|'miss'>('closed');
+ const [consent,setConsentState]=useState(getConsent);
+ const chooseConsent=(v:'yes'|'no')=>{setConsent(v);setConsentState(v);if(v==='yes')track('app_start')};
  useEffect(()=>{checkForUpdate(setUpdateReady)},[]);
+ useEffect(()=>{if(getConsent()==='yes')track('app_start')},[]);
  const [narrator]=useState(createNarrator);
  const {coins,earn,bursts,verdict,setVerdict}=useCoins();
  const listenStart=useRef(0); const listeningRef=useRef(false); const reviewClaimed=useRef(new Set<string>());
@@ -99,7 +103,7 @@ export function App(){
  const dismissLink=(noteId:string)=>setSuggestions(v=>{const {[noteId]:_,...rest}=v;return rest});
  const next=()=>{if(claimSection(doc.title,current.id))earnFromEl(RULES.section,'.section-nav .next');if(active===sections.length-1){setMode('review');return}setActive(v=>Math.min(sections.length-1,v+1))};
  const prev=()=>setActive(v=>Math.max(0,v-1));
- const startListening=()=>{listeningRef.current=true;listenStart.current=Date.now();setListening(true)};
+ const startListening=()=>{listeningRef.current=true;listenStart.current=Date.now();setListening(true);track('narrate_start')};
  // Listen requires the Chirp app running; probe first so the popover can teach.
  const tryListen=async()=>{
   if(chirpPrompt!=='closed'){setChirpPrompt('closed');return}
@@ -124,7 +128,7 @@ export function App(){
   }catch{/* proxy offline — stay on the sample doc */}
   setChecking(false);
  })()},[]);
- const ask=async()=>{if(!question.trim())return;setAsking(true);setAnswer('');try{const text=article.current?.innerText.slice(0,6000)??'';const reply=await chat([{role:'system',content:'You are a reading companion inside Margin. Answer concisely, in under 120 words, grounding every claim in the document excerpt.'},{role:'user',content:`Document excerpt:\n${text}\n\nCurrent section: ${current.number} — ${current.title}\nReader question: ${question}`}]);setAnswer(reply);earnFromEl(RULES.ask,'.ask button')}catch(e){setAnswer(e instanceof Error?e.message:String(e))}finally{setAsking(false)}};
+ const ask=async()=>{if(!question.trim())return;setAsking(true);setAnswer('');try{const text=article.current?.innerText.slice(0,6000)??'';const reply=await chat([{role:'system',content:'You are a reading companion inside Margin. Answer concisely, in under 120 words, grounding every claim in the document excerpt.'},{role:'user',content:`Document excerpt:\n${text}\n\nCurrent section: ${current.number} — ${current.title}\nReader question: ${question}`}]);setAnswer(reply);earnFromEl(RULES.ask,'.ask button');track('ask')}catch(e){setAnswer(e instanceof Error?e.message:String(e))}finally{setAsking(false)}};
  if(checking)return null;
  if(!ready)return <Onboarding onDone={m=>{setModel(m);setReady(true)}}/>;
  return <div className={`app mode-${mode}`}>
@@ -148,6 +152,13 @@ export function App(){
   </main>
   <CoinLayer bursts={bursts}/>
   {updateReady&&<button className="tool" style={{position:'fixed',bottom:16,right:16,zIndex:60}} onClick={()=>relaunch()}>Restart for v{updateReady}</button>}
+  {consent===null&&ready&&<div className="telemetry-banner">
+   <p><b>Share anonymous usage stats?</b> Helps shape Margin. Only feature events — never document content, titles, or keys.</p>
+   <div className="telemetry-actions">
+    <button className="telemetry-allow" onClick={()=>chooseConsent('yes')}>Allow</button>
+    <button className="telemetry-decline" onClick={()=>chooseConsent('no')}>No thanks</button>
+   </div>
+  </div>}
   {verdict&&<VerdictOverlay verdict={verdict} onClose={()=>setVerdict(null)}/>}
   {showAgents&&<AgentsDialog onClose={()=>setShowAgents(false)}/>}
  </div>
