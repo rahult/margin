@@ -134,3 +134,7 @@
 .telemetry-decline{border:0;background:transparent;color:#a9aea7;font-size:13px;cursor:pointer;padding:0}
 .telemetry-decline:hover{color:#e8ebe5}
 @media (prefers-reduced-motion:reduce){.telemetry-banner{animation:none}}
+
+/* Settings dialog extras. */
+.settings-telemetry{display:flex;align-items:center;gap:9px;font-size:13px;color:#a9aea7;margin-top:14px;cursor:pointer}
+.settings-telemetry input{accent-color:#2f6b52}

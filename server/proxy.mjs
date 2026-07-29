@@ -202,7 +202,7 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'POST' && req.url === '/api/config') {
     let body;
     try { body = await readBody(req); } catch { return send(res, 400, {error: 'Invalid JSON body.'}); }
-    if (typeof body.apiKey === 'string') config.LLM_API_KEY = body.apiKey.trim();
+    if (typeof body.apiKey === 'string' && body.apiKey.trim()) config.LLM_API_KEY = body.apiKey.trim();
     if (typeof body.baseUrl === 'string' && body.baseUrl.trim()) config.LLM_BASE_URL = body.baseUrl.trim();
     if (typeof body.model === 'string' && body.model.trim()) config.LLM_MODEL = body.model.trim();
     saveEnv(config);
